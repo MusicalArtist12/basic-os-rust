@@ -21,8 +21,9 @@ fn main() {
         println!("cargo::rustc-link-search=native={}", out_dir);
         println!("cargo::rustc-link-lib=static={}", file);
         println!("cargo::warning={}/arch/x86_64/{}.o", out_dir, file);
+        println!("cargo::rerun-if-changed=src/arch/x86_64/{}.asm", file);
         
     }
 
-    println!("cargo::rerun-if-changed=build.rs");
+    
 }
