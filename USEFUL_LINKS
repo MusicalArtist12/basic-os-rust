@@ -1,0 +1,13 @@
+https://github.com/quaternotech/asmos/blob/main/cfg/ld/x86_64.ld
+https://doc.rust-lang.org/rust-by-example/index.html
+https://docs.rust-embedded.org/book/c-tips/index.html
+https://docs.rust-embedded.org/book/c-tips/index.html
+https://os.phil-opp.com/multiboot-kernel/#multiboot 
+
+goals: write a kernel with as few external modules as possible
+
+    "pre-link-args": {
+        "ld.lld": [
+            "--script=cfg/ld/x86_64.ld"
+        ]
+    },
