@@ -37,16 +37,16 @@ macro_rules! sizeof_multiboot_header {
 
 macro_rules! header_checksum {
     () => {
-        -(HEADER_MAGIC + HEADER_ARCH + sizeof_multiboot_header!() as isize) as u32
+        -((HEADER_MAGIC + HEADER_ARCH + sizeof_multiboot_header!()) as isize) as u32
     };
 }
 
-#[link_section = ".multiboot"]
+#[link_section = ".boot.multiboot"]
 #[no_mangle]
-static MULTIBOOT_HEADER: multiboot_header {
+static MULTIBOOT_HEADER: multiboot_header = multiboot_header {
     magic:         HEADER_MAGIC,
     architecture:  HEADER_ARCH,
     header_length: sizeof_multiboot_header!(),
     checksum:      header_checksum!(),
     end_tag:       tag_end!()
-}
+};
