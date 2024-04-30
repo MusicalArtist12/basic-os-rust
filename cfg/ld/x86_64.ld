@@ -10,18 +10,14 @@ SECTIONS
     {
       KEEP(*(.boot.multiboot))
     }
-    
+
     .text :
     {
-      KEEP(*(.init.text))
+      KEEP(*(.init.text)) 
     }
 
-    .bss :
+	  .rodata : 
     {
-      KEEP(*(.init.bss))
-    }
-    .rodata :
-    {
-      KEEP(*(.init.rodata))
+      *(.rodata .rodata.*)
     }
 }
