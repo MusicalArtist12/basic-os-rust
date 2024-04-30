@@ -1,20 +1,8 @@
 .global start
 
-.section .init.bss
-  .align 4096
-p4_table:
-    .skip 4096
-p3_table:
-    .skip 4096
-p2_table:
-    .skip 4096
-stack_bottom:
-    .skip 4096 * 2
-stack_top:
-
 
 // Global Descriptor Table
-.section .init.rodata
+.section .rodata
 gdt64:
   .quad 0 // zero entry
 
@@ -35,24 +23,25 @@ gdt64_pointer:
 .section .init.text, "ax", @progbits
 .code32
 start:
-    cli 
-    mov esp, stack_top
 
-    call check_multiboot
-    call check_long_mode
+    
+    call check_multiboot   
     call check_cpuid
+    call check_long_mode
 
     call enable_paging
     call enable_compatibility_mode
 
     lgdt [gdt64_pointer]
 
-    mov eax, [gdt64_data_seg]
-    mov ds, eax
-    mov es, eax
-    mov fs, eax
-    mov gs, eax
-    mov ss, eax
+    // mov eax, [gdt64_data_seg]
+    // mov ds, eax
+    // mov es, eax
+    // mov fs, eax
+    // mov gs, eax
+    // mov ss, eax
+
+    mov dword ptr [0xb8000], 0x2f4b2f4f
 
     jmp long_jump
 
