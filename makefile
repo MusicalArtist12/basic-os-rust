@@ -2,6 +2,7 @@ kernel:
 	cargo build
 
 iso: kernel
+	@rm -rf build
 	@mkdir -p build/
 	@cp -r image build/isofiles
 	@cp target/x86_64/debug/basic-os-rust build/isofiles/boot/kernel.bin

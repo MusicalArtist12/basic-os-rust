@@ -14,11 +14,14 @@ SECTIONS
     .text :
     {
       KEEP(*(.init.text))
-    
     }
 
-	  .rodata : 
+    .bss :
     {
-      *(.rodata .rodata.*)
+      KEEP(*(.init.bss))
+    }
+    .rodata :
+    {
+      KEEP(*(.init.rodata))
     }
 }

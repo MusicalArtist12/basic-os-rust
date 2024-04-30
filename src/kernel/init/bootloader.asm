@@ -1,6 +1,6 @@
 .global start
 
- .section .bss
+.section .init.bss
   .align 4096
 p4_table:
     .skip 4096
@@ -12,42 +12,49 @@ stack_bottom:
     .skip 4096 * 2
 stack_top:
 
-  // Global Descriptor Table
-.section .rodata
-.align 16
+
+// Global Descriptor Table
+.section .init.rodata
 gdt64:
-    .quad 0 // zero entry
-gdt64_code_lbl:
-    .quad (1<<41) | (1<<43) | (1<<44) | (1<<47) | (1<<53) // code segment
-gdt64_data_lbl:
-    .quad (1<<41) | (1<<44) | (1<<47) | (1<<53)
-gdt64_ptr_lbl:
-    .word gdt64_pointer
-    .quad gdt64
+  .quad 0 // zero entry
 
-.set gdt64_pointer, gdt64_ptr_lbl - gdt64 - 1
-.set gdt64_code, gdt64_code_lbl - gdt64
-.set gdt64_data, gdt64_data_lbl - gdt64
+gdt64_code_entry:
+  .set gdt64_code_seg, gdt64_code_entry - gdt64
+  .quad (1<<44) | (1<<47) | (1<<41) | (1<<43) | (1<<53) // code segment
 
-.section .text, "ax", @progbits
+gdt64_data_entry:
+  .set gdt64_data_seg, gdt64_data_entry - gdt64
+  .quad (1<<44) | (1<<47) | (1<<41) // data segment
+
+gdt64_pointer:
+  .set gdt64_limit, gdt64_pointer - gdt64 - 1
+  .word gdt64_limit
+  .quad gdt64
+
+
+.section .init.text, "ax", @progbits
 .code32
 start:
+    cli 
     mov esp, stack_top
-    
+
     call check_multiboot
-    call check_cpuid
     call check_long_mode
+    call check_cpuid
 
     call enable_paging
     call enable_compatibility_mode
 
     lgdt [gdt64_pointer]
 
-    mov ax, gdt64_data
-    mov ss, ax
-    mov ds, ax
-    mov es, ax
+    mov eax, [gdt64_data_seg]
+    mov ds, eax
+    mov es, eax
+    mov fs, eax
+    mov gs, eax
+    mov ss, eax
 
+    jmp long_jump
 
     hlt
 
@@ -165,10 +172,10 @@ enable_compatibility_mode:
 
     ret
 
-.section .text, "ax", @progbits
+.section .init.text, "ax", @progbits
 .code64
 long_mode_start:
-    // print `OKAY` to screen
     mov rax, 0x2f592f412f4b2f4f
     mov qword ptr [0xb8000], rax
+
     hlt
