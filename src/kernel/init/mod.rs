@@ -5,8 +5,6 @@ mod multiboot;
 global_asm!(include_str!("bootloader.asm"));
 
 global_asm!(r#"
-.extern gdt_code_seg
-.extern long_mode_start
 .code32
 .section .init.text, "ax", @progbits
 long_jump:
