@@ -23,8 +23,6 @@ gdt64_pointer:
 .section .init.text, "ax", @progbits
 .code32
 start:
-
-    
     call check_multiboot   
     call check_cpuid
     call check_long_mode
@@ -160,11 +158,3 @@ enable_compatibility_mode:
     mov cr0, eax                 // Set control register 0 to the A-register.
 
     ret
-
-.section .init.text, "ax", @progbits
-.code64
-long_mode_start:
-    mov rax, 0x2f592f412f4b2f4f
-    mov qword ptr [0xb8000], rax
-
-    hlt
