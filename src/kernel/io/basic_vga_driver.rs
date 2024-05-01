@@ -56,8 +56,14 @@ struct Buffer {
     chars: [[ScreenChar; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
 
-pub struct Writer {
+struct VGAInterface {
     column_position: usize,
     default_attr: CharAttr,
     buffer: *mut Buffer
+}
+
+impl VGAInterface {
+    pub fn set_byte(&mut self, pos: (u8, u8), val: ScreenChar) {
+
+    }
 }
