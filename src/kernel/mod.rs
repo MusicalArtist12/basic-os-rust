@@ -1,2 +1,2 @@
 mod init;
-mod io;
+pub mod io;
