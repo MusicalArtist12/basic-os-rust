@@ -18,21 +18,8 @@ pub fn main() {
     
     interface.clear_screen();
 
-    for _ in 0..5 {
-        interface.print_char(b'H', None);
-        interface.print_char(b'E', None);
-        interface.print_char(b'L', None);
-        interface.print_char(b'L', None);
-        interface.print_char(b'O', None);
-        interface.print_char(b' ', None);
-        interface.print_char(b'W', None);
-        interface.print_char(b'O', None);
-        interface.print_char(b'R', None);
-        interface.print_char(b'L', None);
-        interface.print_char(b'D', None);
-        interface.print_char(b'\n', None);
-    }
-
+    interface.print_string("hello world!\n", None);
+    interface.print_string("nice to meet you!\n", None);
 
     loop {}
 }

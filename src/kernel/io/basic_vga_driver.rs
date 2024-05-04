@@ -25,17 +25,20 @@ pub enum Color {
 #[repr(transparent)]
 pub struct CharAttr(u8);
 
-impl CharAttr {
-    pub fn new(foreground: Color, background: Color) -> CharAttr {
-        CharAttr((background as u8) << 4 | (foreground as u8))
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
-struct ScreenChar {
+pub struct ScreenChar {
     ascii_char: u8,
     attribute: CharAttr
+}
+
+// todo: implement mutual exclusion 
+pub struct Terminal {
+    pub default_attr: CharAttr,
+    buffer: *mut ScreenChar,
+    width: usize,
+    height: usize,
+    column_idx: usize
 }
 
 impl ScreenChar {
@@ -47,15 +50,30 @@ impl ScreenChar {
     }
 }
 
-pub struct Terminal {
-    pub default_attr: CharAttr,
-    buffer: *mut ScreenChar,
-    width: usize,
-    height: usize,
-    column_idx: usize
+impl CharAttr {
+    pub fn new(foreground: Color, background: Color) -> CharAttr {
+        CharAttr((background as u8) << 4 | (foreground as u8))
+    }
 }
 
 impl Terminal {
+    fn newline(&mut self) {
+        for row in 1..self.height {
+            for col in 0..self.width {
+                let character = self.read_char((col, row));
+                self.set_char((col, row), b' ', None);
+
+                match character {
+                    Some(x) => self.set_char((col, row - 1), x.ascii_char, Some(x.attribute)),
+                    None => {}
+                }        
+            }
+        }
+
+        self.column_idx = 0;
+    }
+
+    // constructor for vga text mode 80x25
     pub fn vga_text_mode(def_attr: CharAttr) -> Terminal {
         Terminal {
             default_attr: def_attr,
@@ -64,6 +82,18 @@ impl Terminal {
             height: 25,
             column_idx: 0
         }   
+    }
+
+    pub fn read_char(&mut self, pos: (usize, usize)) -> Option<ScreenChar> {
+        if pos.0 > self.width || pos.1 > self.height {
+            return None;
+        }
+
+        let index: isize = (pos.0 + (pos.1 * self.width)) as isize;
+        let character: ScreenChar = unsafe {
+            read_volatile(self.buffer.offset(index)) as ScreenChar
+        };
+        return Some(character);
     }
 
     pub fn set_char(&mut self, pos: (usize, usize), val: u8, overwrite_attr: Option<CharAttr>) {
@@ -86,16 +116,15 @@ impl Terminal {
         }
     }
 
-    fn read_char(&mut self, pos: (usize, usize)) -> Option<ScreenChar> {
-        if pos.0 > self.width || pos.1 > self.height {
-            return None;
+    pub fn print_char(&mut self, val: u8, overwrite_attr: Option<CharAttr>) {
+        if val == b'\n' {
+            self.newline();
+        }
+        else {
+            self.set_char((self.column_idx, self.height - 1), val, overwrite_attr);
+            self.column_idx += 1;
         }
 
-        let index: isize = (pos.0 + (pos.1 * self.width)) as isize;
-        let character: ScreenChar = unsafe {
-            read_volatile(self.buffer.offset(index)) as ScreenChar
-        };
-        return Some(character);
     }
 
     pub fn clear_screen(&mut self) {
@@ -106,30 +135,9 @@ impl Terminal {
         }   
     }
 
-    fn newline(&mut self) {
-        for row in 1..self.height {
-            for col in 0..self.width {
-                let character = self.read_char((col, row));
-                self.set_char((col, row), b' ', None);
-
-                match character {
-                    Some(x) => self.set_char((col, row - 1), x.ascii_char, Some(x.attribute)),
-                    None => {}
-                }        
-            }
+    pub fn print_string(&mut self, val: &str, overwrite_attr: Option<CharAttr>) {
+        for c in val.chars() {
+            self.print_char(c as u8, overwrite_attr);
         }
-
-        self.column_idx = 0;
-    }
-
-    pub fn print_char(&mut self, val: u8, overwrite_attr: Option<CharAttr>) {
-        if val == b'\n' {
-            self.newline();
-        }
-        else {
-            self.set_char((self.column_idx, self.height - 1), val, overwrite_attr);
-            self.column_idx += 1;
-        }
-
     }
 }
