@@ -1,1 +1,1 @@
-// make files on secondary storage known
+// make files on secondary storage known - data structure
