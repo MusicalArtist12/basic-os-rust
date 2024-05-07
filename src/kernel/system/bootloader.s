@@ -1,9 +1,3 @@
-/* Code Sources
-    - https://wiki.osdev.org/Setting_Up_Long_Mode
-
-*/
-
-
 .global start
 .section .init.text, "ax", @progbits
 .code32

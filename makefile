@@ -11,7 +11,6 @@ iso: kernel
 run: iso
 	@qemu-system-x86_64 -cdrom build/os.iso -accel tcg 
 
-
 clean:
 	cargo clean
 	rm -r build

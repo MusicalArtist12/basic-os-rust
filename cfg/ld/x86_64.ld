@@ -6,18 +6,15 @@ SECTIONS
 {
     . = 1M;
 
-    .boot : 
-    {
-      KEEP(*(.boot.multiboot))
+    .boot : {
+        KEEP(*(.boot.multiboot))
     }
 
-    .text :
-    {
-      KEEP(*(.init.text)) 
+    .text : {
+        KEEP(*(.init.text)) 
     }
 
-	  .rodata : 
-    {
-      *(.rodata .rodata.*)
+    .rodata : {
+        *(.rodata .rodata.*)
     }
 }

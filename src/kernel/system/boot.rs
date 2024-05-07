@@ -7,7 +7,6 @@ fn successful_boot() {
     println!("Boot Successful! Here's a {}", "balloon!");
 
     STDOUT.lock().change_color(CharAttr::new(Color::Red, Color::Black));
-
     println!(r#"
        _..._  ,s$$$s.
     .$$$$$$$s$$ss$$$$,
