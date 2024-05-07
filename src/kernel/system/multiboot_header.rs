@@ -50,3 +50,4 @@ static MULTIBOOT_HEADER: multiboot_header = multiboot_header {
     checksum:      header_checksum!(),
     end_tag:       tag_end!()
 };
+

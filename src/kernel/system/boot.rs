@@ -1,10 +1,8 @@
-global_asm!(include_str!("bootloader.s"),  options(att_syntax));
-
-static HELLO: &[u8] = b"Hello World!     ";
+use crate::main;
 
 #[no_mangle]
-pub extern "C" fn _start() -> ! {
-    main();
+pub extern "C" fn _start(mulitboot_information_address: usize) -> ! {
+    main(mulitboot_information_address);
 
     loop {}
 }

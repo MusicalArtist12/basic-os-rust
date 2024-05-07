@@ -1,4 +1,8 @@
-use core::{char, ptr::{self, read_volatile, write_volatile}};
+use core::{
+    ptr::{read_volatile, write_volatile}, 
+    fmt::{self, Write}
+};
+use crate::kernel::sync::mutex::Mutex;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -51,20 +55,30 @@ impl ScreenChar {
 }
 
 impl CharAttr {
-    pub fn new(foreground: Color, background: Color) -> CharAttr {
+    pub const fn new(foreground: Color, background: Color) -> CharAttr {
         CharAttr((background as u8) << 4 | (foreground as u8))
     }
 }
 
 impl Terminal {
+    fn print_char(&mut self, val: u8) {
+        if val == b'\n' {
+            self.newline();
+        }
+        else {
+            self.write((self.column_idx, self.height - 1), val, None);
+            self.column_idx += 1;
+        }
+    }
+
     fn newline(&mut self) {
         for row in 1..self.height {
             for col in 0..self.width {
-                let character = self.read_char((col, row));
-                self.set_char((col, row), b' ', None);
+                let character = self.read((col, row));
+                self.write((col, row), b' ', None);
 
                 match character {
-                    Some(x) => self.set_char((col, row - 1), x.ascii_char, Some(x.attribute)),
+                    Some(x) => self.write((col, row - 1), x.ascii_char, Some(x.attribute)),
                     None => {}
                 }        
             }
@@ -74,7 +88,7 @@ impl Terminal {
     }
 
     // constructor for vga text mode 80x25
-    pub fn vga_text_mode(def_attr: CharAttr) -> Terminal {
+    pub const fn vga_text_mode(def_attr: CharAttr) -> Terminal {
         Terminal {
             default_attr: def_attr,
             buffer: 0xb8000 as *mut ScreenChar,
@@ -84,7 +98,7 @@ impl Terminal {
         }   
     }
 
-    pub fn read_char(&mut self, pos: (usize, usize)) -> Option<ScreenChar> {
+    pub fn read(&mut self, pos: (usize, usize)) -> Option<ScreenChar> {
         if pos.0 > self.width || pos.1 > self.height {
             return None;
         }
@@ -96,7 +110,7 @@ impl Terminal {
         return Some(character);
     }
 
-    pub fn set_char(&mut self, pos: (usize, usize), val: u8, overwrite_attr: Option<CharAttr>) {
+    pub fn write(&mut self, pos: (usize, usize), val: u8, overwrite_attr: Option<CharAttr>) {
         if pos.0 > self.width || pos.1 > self.height {
             return;
         }
@@ -116,28 +130,40 @@ impl Terminal {
         }
     }
 
-    pub fn print_char(&mut self, val: u8, overwrite_attr: Option<CharAttr>) {
-        if val == b'\n' {
-            self.newline();
-        }
-        else {
-            self.set_char((self.column_idx, self.height - 1), val, overwrite_attr);
-            self.column_idx += 1;
-        }
-
-    }
-
     pub fn clear_screen(&mut self) {
         for row in 1..self.height {
             for col in 0..self.width {    
-                self.set_char((col, row), b' ', None);
+                self.write((col, row), b' ', None);
             }
         }   
     }
 
-    pub fn print_string(&mut self, val: &str, overwrite_attr: Option<CharAttr>) {
-        for c in val.chars() {
-            self.print_char(c as u8, overwrite_attr);
+}
+
+// public interface: write_str, write_char, write_fmt
+impl fmt::Write for Terminal {
+    fn write_str(&mut self, s: &str) -> fmt::Result {
+        for c in s.chars() {
+            self.print_char(c as u8);
         }
+        Ok(())
     }
+}
+
+pub static STDOUT: Mutex<Terminal> = Mutex::new(Terminal::vga_text_mode(CharAttr::new(Color::Black, Color::White)));
+
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => ($crate::kernel::io::basic_vga_driver::_print(format_args!($($arg)*)));
+}
+
+#[macro_export]
+macro_rules! println {
+    () => ($crate:::print!("\n"));
+    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+}
+
+pub fn _print(args: fmt::Arguments) {
+    
+    STDOUT.lock().write_fmt(args).unwrap();
 }

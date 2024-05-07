@@ -27,6 +27,7 @@ gdt64_pointer:
 
 start:
     movl $stack_top, %esp
+    mov %ebx, %edi          // pass multiboot address information to _start
 
     call check_cpuid
     call check_longmode
@@ -133,16 +134,4 @@ longmode_fail:
     movl $0x4f444f4d, vga_start + 8
 
     hlt
-
-.section .bss
-.align 4096
-p4_table:
-    .skip 4096
-p3_table:
-    .skip 4096
-p2_table:
-    .skip 4096
-stack_bottom:
-    .skip 4096 * 2
-stack_top:
 
