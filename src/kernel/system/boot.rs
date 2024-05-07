@@ -34,7 +34,7 @@ fn successful_boot() {
 }
 
 #[no_mangle]
-pub extern "C" fn _start(mulitboot_information_address: usize) -> ! {
+pub extern "C" fn _start(_mulitboot_information_address: usize) -> ! {
     successful_boot();
 
     main();

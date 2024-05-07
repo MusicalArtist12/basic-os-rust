@@ -4,24 +4,24 @@ const HEADER_MAGIC: u32 = 0xE85250D6;
 const HEADER_ARCH:  u32 = 0;
 
 #[repr(C, align(8))]
-struct header_tag {
+struct HeaderTag {
     tag: u16,
     flags: u16,
     size: u32
 }
 
 #[repr(C)]
-struct multiboot_header {
+struct MultibootHeader {
     magic: u32,
     architecture: u32,
     header_length: u32,
     checksum: u32,
-    end_tag: header_tag
+    end_tag: HeaderTag
 }
 
 macro_rules! tag_end {
     () => {
-        header_tag {
+        HeaderTag {
             tag:   0,
             flags: 0,
             size:  8
@@ -31,7 +31,7 @@ macro_rules! tag_end {
 
 macro_rules! sizeof_multiboot_header {
     () => {
-        core::mem::size_of::<multiboot_header>() as u32
+        core::mem::size_of::<MultibootHeader>() as u32
     };
 }
 
@@ -43,7 +43,7 @@ macro_rules! header_checksum {
 
 #[link_section = ".boot.multiboot"]
 #[no_mangle]
-static MULTIBOOT_HEADER: multiboot_header = multiboot_header {
+static MULTIBOOT_HEADER: MultibootHeader = MultibootHeader {
     magic:         HEADER_MAGIC,
     architecture:  HEADER_ARCH,
     header_length: sizeof_multiboot_header!(),
