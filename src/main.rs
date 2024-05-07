@@ -5,43 +5,12 @@
 
 pub mod kernel;
 use core::panic::PanicInfo;
-use core::fmt::Write;
-use crate::kernel::io::basic_vga_driver::{STDOUT, CharAttr, Color};
+
 #[panic_handler]
 fn on_panic(_panic_info: &PanicInfo) -> ! {
     loop {}
 }
 
-pub fn main(multiboot_addr: usize) {
-    STDOUT.lock().default_attr = CharAttr::new(Color::Red, Color::Black);
+pub fn main() {
 
-    STDOUT.lock().clear_screen();
-
-    println!("Hello World, heres a {}", "balloon!");
-
-    println!(r#"
-       _..._  ,s$$$s.
-    .$$$$$$$s$$ss$$$$,
-    $$$sss$$$$s$$$$$$$
-    $$ss$$$$$$$$$$$$$$
-    '$$$s$$$$$$$$$$$$'
-     '$$$$$$$$$$$$$$'
-       S$$$$$$$$$$$'
-        '$$$$$$$$$'
-          '$$$$$'
-           '$$$'
-             ;
-            ;
-            ;
-            ',
-             ;
-            ,'
-            ;
-            ',
-             ',
-              ;
-             '
-"#);
-
-    loop {}
 }

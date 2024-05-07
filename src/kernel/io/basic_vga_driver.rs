@@ -1,3 +1,5 @@
+const VGA_BUFFER_ADDR: usize = 0x0b8000;
+
 use core::{
     ptr::{read_volatile, write_volatile}, 
     fmt::{self, Write}
@@ -36,13 +38,18 @@ pub struct ScreenChar {
     attribute: CharAttr
 }
 
-// todo: implement mutual exclusion 
 pub struct Terminal {
-    pub default_attr: CharAttr,
+    default_attr: CharAttr,
     buffer: *mut ScreenChar,
     width: usize,
     height: usize,
     column_idx: usize
+}
+
+impl CharAttr {
+    pub const fn new(foreground: Color, background: Color) -> CharAttr {
+        CharAttr((background as u8) << 4 | (foreground as u8))
+    }
 }
 
 impl ScreenChar {
@@ -51,12 +58,6 @@ impl ScreenChar {
             ascii_char: value,
             attribute: attr, 
         }
-    }
-}
-
-impl CharAttr {
-    pub const fn new(foreground: Color, background: Color) -> CharAttr {
-        CharAttr((background as u8) << 4 | (foreground as u8))
     }
 }
 
@@ -86,12 +87,11 @@ impl Terminal {
 
         self.column_idx = 0;
     }
-
-    // constructor for vga text mode 80x25
+    
     pub const fn vga_text_mode(def_attr: CharAttr) -> Terminal {
         Terminal {
             default_attr: def_attr,
-            buffer: 0xb8000 as *mut ScreenChar,
+            buffer: VGA_BUFFER_ADDR as *mut ScreenChar,
             width: 80,
             height: 25,
             column_idx: 0
@@ -138,6 +138,9 @@ impl Terminal {
         }   
     }
 
+    pub fn change_color(&mut self, def_attr: CharAttr) {
+        self.default_attr = def_attr;
+    }
 }
 
 // public interface: write_str, write_char, write_fmt
@@ -150,7 +153,9 @@ impl fmt::Write for Terminal {
     }
 }
 
-pub static STDOUT: Mutex<Terminal> = Mutex::new(Terminal::vga_text_mode(CharAttr::new(Color::Black, Color::White)));
+pub static STDOUT: Mutex<Terminal> = Mutex::new(
+    Terminal::vga_text_mode(CharAttr::new(Color::White, Color::Black))
+);
 
 #[macro_export]
 macro_rules! print {

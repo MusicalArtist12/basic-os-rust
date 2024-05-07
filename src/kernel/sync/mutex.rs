@@ -36,6 +36,9 @@ impl<T> Mutex<T> {
     }
 }
 
+unsafe impl<T> Sync for Mutex<T> {}
+unsafe impl<T> Send for Mutex<T> {}
+
 impl<'a, T: ?Sized> Token<'a, T> {
 
     pub fn get_mut(&mut self) -> &mut T {
@@ -43,8 +46,6 @@ impl<'a, T: ?Sized> Token<'a, T> {
     }
 }
 
-
-// unlock when its freed
 impl<'a, T: ?Sized> Drop for Token<'a, T> {
     fn drop(&mut self) {
         self.lock.store(false, Ordering::Release);
@@ -64,9 +65,6 @@ impl<'a, T: ?Sized> DerefMut for Token<'a, T> {
        self.get_mut()
     }
 }
-
-unsafe impl<T> Sync for Mutex<T> {}
-unsafe impl<T> Send for Mutex<T> {}
 
 unsafe impl<T: ?Sized + Sync> Sync for Token<'_, T> {}
 unsafe impl<T: ?Sized + Send> Send for Token<'_, T> {}
