@@ -1,149 +1,115 @@
 pub mod idt;
 pub mod irq;
-use crate::{kernel::io::basic_vga_driver::STDOUT, println};
-use core::fmt::Write;
-use core::arch::asm;
+use crate::println;
 use idt::IDT;
 
 extern "C" fn division_by_zero() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\ndivision_by_zero\n");
-        // asm!("iretq")
-    }
+    println!("\ndivision_by_zero\n");
+    
     loop { }
 }
 
 extern "C" fn single_step_interrupt() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\nsingle_step_interrupt\n");
-        // asm!("iretq")
-    }
+    println!("\nsingle_step_interrupt\n");
+    
     loop { }
 }
 
 extern "C" fn non_maskable_interrupt() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\nnon_maskable_interrupt\n");
-        // asm!("iretq")
-    }
+    println!("\nnon_maskable_interrupt\n");
+    
     loop { }
 }
 
 extern "C" fn breakpoint() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\nbreakpoint\n");
-        // asm!("iretq")
-    }
+    println!("\nbreakpoint\n");
+    
     loop { }
 }
 
 extern "C" fn overflow() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\noverflow\n");
-        // asm!("iretq")
-    }
+    println!("\noverflow\n");
+    
     loop { }
 }
 
 extern "C" fn bound_range_exceeded() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\nbound_range_exceeded\n");
-        // asm!("iretq")
-    }
+    println!("\nbound_range_exceeded\n");
+    
     loop { }
 }
 
 extern "C" fn invalid_opcode() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\ninvalid_opcode\n");
-        // asm!("iretq")
-    }
+    println!("\ninvalid_opcode\n");
+    
     loop { }
 }
 
 extern "C" fn coprocessor_not_available() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\ncoprocessor_not_available\n");
-        // asm!("iretq")
-    }
+    println!("\ncoprocessor_not_available\n");
+    
     loop { }
 }
 
 extern "C" fn double_fault() -> ! {
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\ndouble_fault\n");
-        // asm!("iretq")
-    }
+    println!("\ndouble_fault\n");
+    
     loop { }
 }
 
 extern "C" fn invalid_tss() -> ! {
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\ninvalid_tss\n");
-        // asm!("iretq")
-    }
+    println!("\ninvalid_tss\n");
+    
     loop { }
 }
 
 extern "C" fn segment_not_present() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\nsegment_not_present\n");
-        // asm!("iretq")
-    }
+    println!("\nsegment_not_present\n");
+    
     loop { }
 }
 
 extern "C" fn stack_seg_fault() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\nstack_seg_fault\n");
-        // asm!("iretq")
-    }
+    println!("\nstack_seg_fault\n");
+    
     loop { }
 }
 
 extern "C" fn general_protection() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\ngeneral_protection\n");
-        // asm!("iretq")
-    }
+    println!("\ngeneral_protection\n");
+    
     loop { }
 }
 
 extern "C" fn page_fault() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\npage_fault\n");
-        // asm!("iretq")
-    }
+    println!("\npage_fault\n");
+    
     loop { }
 }
 
 extern "C" fn reserved() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\nreserved\n");
-        // asm!("iretq")
-    }
+    println!("\nreserved\n");
+    
     loop { }
 }
 
 extern "C" fn unhandled() -> ! {
     
-    unsafe {
-        write!(*STDOUT.bypass_lock(), "\nunhandled\n");
-        // asm!("iretq")
-    }
+    println!("\nunhandled\n");
+    
     loop { }
 }
 
