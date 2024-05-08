@@ -1,116 +1,129 @@
 pub mod idt;
 pub mod irq;
 use crate::println;
+use core::arch::asm;
 use idt::IDT;
+use idt::ExceptionStackFrame;
 
+#[naked]
 extern "C" fn division_by_zero() -> ! {
-    
-    println!("\ndivision_by_zero\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn single_step_interrupt() -> ! {
-    
-    println!("\nsingle_step_interrupt\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn non_maskable_interrupt() -> ! {
-    
-    println!("\nnon_maskable_interrupt\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn breakpoint() -> ! {
-    
-    println!("\nbreakpoint\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn overflow() -> ! {
-    
-    println!("\noverflow\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn bound_range_exceeded() -> ! {
-    
-    println!("\nbound_range_exceeded\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn invalid_opcode() -> ! {
-    
-    println!("\ninvalid_opcode\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn coprocessor_not_available() -> ! {
-    
-    println!("\ncoprocessor_not_available\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn double_fault() -> ! {
-    println!("\ndouble_fault\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn invalid_tss() -> ! {
-    println!("\ninvalid_tss\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn segment_not_present() -> ! {
-    
-    println!("\nsegment_not_present\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn stack_seg_fault() -> ! {
-    
-    println!("\nstack_seg_fault\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn general_protection() -> ! {
-    
-    println!("\ngeneral_protection\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+#[naked]
 extern "C" fn page_fault() -> ! {
-    
-    println!("\npage_fault\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }    
 }
 
+
+#[naked]
 extern "C" fn reserved() -> ! {
-    
-    println!("\nreserved\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }
 }
 
+
+#[naked]
 extern "C" fn unhandled() -> ! {
-    
-    println!("\nunhandled\n");
-    
-    loop { }
+    unsafe {
+        asm!("mov rdi, rsp; call stack_frame_handler", options(noreturn))
+    }
+}
+
+#[no_mangle]
+extern "C" fn stack_frame_handler(stack_frame: &ExceptionStackFrame) -> ! {
+    println!("\n{:#?}", stack_frame);
+
+    loop {}
 }
 
 pub fn init_idt() {

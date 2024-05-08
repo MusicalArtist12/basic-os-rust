@@ -1,11 +1,20 @@
 use core::arch::asm;
 use crate::kernel::system::gdt::gdt64_code_offset;
 use crate::kernel::sync::mutex::Mutex;
-use crate::println;
 
 pub type HandlerFunc = extern "C" fn() -> !;
 
 pub struct Idt([Entry; 256]);
+
+#[derive(Debug)]
+#[repr(C)]
+pub struct ExceptionStackFrame {
+    instruction_pointer: u64,
+    code_segment: u64,
+    cpu_flags: u64,
+    stack_pointer: u64,
+    stack_segment: u64,
+}
 
 #[repr(C, packed)]
 struct Idtr {
@@ -103,11 +112,11 @@ impl Idt {
         IDTR.lock().get_mut().base = self as *const _ as u64;
         IDTR.lock().get_mut().limit = core::mem::size_of::<Self>() as u16 - 1;  
 
-        println!("loading addr: {:#x}", self as *const _ as u64);
+        // println!("loading addr: {:#x}", self as *const _ as u64);
         
         unsafe {    
             let addr = IDTR.lock().get_ptr();
-            println!("IDTR addr: {:#x}", addr as u64);
+            // println!("IDTR addr: {:#x}", addr as u64);
 
             asm!(r#"
                 lidt [{}]

@@ -1,5 +1,5 @@
 .global start
-.section .init.text, "ax", @progbits
+.section .init, "ax", @progbits
 .code32
 
 start:
@@ -15,6 +15,9 @@ start:
 
     lgdt (gdt64_pointer)
 
+    ljmp $gdt64_code_offset, $fix_cs
+
+fix_cs:    
     movw $gdt64_data_offset, %ax
     movw %ax, %ds
     movw %ax, %es
@@ -22,9 +25,6 @@ start:
     movw %ax, %gs
     movw %ax, %ss
 
-    ljmp $gdt64_code_offset, $fix_cs
-
-fix_cs:    
     mov %ebx, %edi          // pass multiboot address information to _start
     jmp _start
 

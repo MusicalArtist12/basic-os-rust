@@ -1,4 +1,4 @@
-.section .rodata
+.section .rodata.gdt
 .align 4
 .global gdt64_code_offset
 .global gdt64_data_offset

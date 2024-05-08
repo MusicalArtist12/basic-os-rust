@@ -5,6 +5,6 @@ mod interrupts;
 mod boot;
 mod multiboot;
 
-global_asm!(include_str!("bootloader.s"), options(att_syntax));
-global_asm!(include_str!("memory.s"), options(att_syntax));
+global_asm!(include_str!("init.s"), options(att_syntax));
+global_asm!(include_str!("bss.s"), options(att_syntax));
 

@@ -9,12 +9,4 @@ SECTIONS
     .boot : {
         KEEP(*(.boot.multiboot))
     }
-
-    .text : {
-        KEEP(*(.init.text)) 
-    }
-
-    .rodata : {
-        *(.rodata .rodata.*)
-    }
 }

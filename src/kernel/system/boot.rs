@@ -9,6 +9,7 @@ fn successful_boot() {
     println!("Boot Successful! Here's a {}", "balloon!");
 
     STDOUT.lock().change_color(CharAttr::new(Color::Red, Color::Black));
+
     println!(r#"
        _..._  ,s$$$s.
     .$$$$$$$s$$ss$$$$,
@@ -34,16 +35,13 @@ fn successful_boot() {
     "#);
 }
 
-
-
-
 #[no_mangle]
 pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
     init_idt();
     successful_boot();
 
     STDOUT.lock().change_color(CharAttr::new(Color::White, Color::Black));
-    read_multiboot(multiboot_information_address as u32);
+    // read_multiboot(multiboot_information_address as u32);
     
 
     main();

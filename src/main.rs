@@ -2,6 +2,7 @@
 #![no_main] // disable all Rust-level entry points
 #![allow(dead_code)]
 #![feature(lazy_cell)]
+#![feature(naked_functions)]
 
 pub mod kernel;
 use core::panic::PanicInfo;
