@@ -3,9 +3,10 @@
 .code32
 
 start:
+    cli 
     movl $stack_top, %esp
-    mov %ebx, %edi          // pass multiboot address information to _start
-
+    
+    call check_multiboot
     call check_cpuid
     call check_longmode
 
@@ -13,14 +14,27 @@ start:
     call enable_paging
 
     lgdt (gdt64_pointer)
+
     movw $gdt64_data_offset, %ax
-    movw %ax, %ss
     movw %ax, %ds
     movw %ax, %es
+    movw %ax, %fs
+    movw %ax, %gs
+    movw %ax, %ss
 
-    ljmp $gdt64_code_offset, $_start
+    ljmp $gdt64_code_offset, $fix_cs
+
+fix_cs:    
+    mov %ebx, %edi          // pass multiboot address information to _start
+    jmp _start
 
     hlt
+
+check_multiboot:
+    cmp $0x36d76289, %eax 
+    jne multiboot_fail
+
+    ret
 
 check_cpuid:
     pushfd
@@ -53,10 +67,6 @@ check_longmode:
     ret 
 
 setup_page_tables:
-    mov $p4_table, %eax
-    orl $0b11, %eax
-    movl %eax, (p4_table + 511 * 8)
-
     movl $p3_table, %eax
     or $0b11, %eax
     movl %eax, (p4_table)
@@ -68,7 +78,7 @@ setup_page_tables:
     movl $0, %ecx
     .map_p2_table:
         movl $0x200000, %eax
-        mul %eax
+        mul %ecx
         orl $0b10000011, %eax
         movl %eax, p2_table(,%ecx, 8)
 
@@ -112,3 +122,11 @@ longmode_fail:
 
     hlt
 
+multiboot_fail:
+    movl $0x4f554f4d, vga_start
+    movl $0x4f544f4c, vga_start + 4
+    movl $0x4f424f49, vga_start + 8
+    movl $0x4f4f4f4f, vga_start + 12
+    movl $0x4f0a4f54, vga_start + 16
+
+    hlt

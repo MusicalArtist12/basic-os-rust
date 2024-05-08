@@ -34,6 +34,10 @@ impl<T> Mutex<T> {
             }
         }
     }
+
+    pub unsafe fn bypass_lock(&self) -> *mut T {
+        self.data.get()
+    }
 }
 
 unsafe impl<T> Sync for Mutex<T> {}
@@ -43,6 +47,10 @@ impl<'a, T: ?Sized> Token<'a, T> {
 
     pub fn get_mut(&mut self) -> &mut T {
         unsafe { &mut *self.data }
+    }
+
+    pub unsafe fn get_ptr(&mut self) -> *const T {
+        self.data
     }
 }
 

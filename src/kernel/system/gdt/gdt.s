@@ -1,5 +1,9 @@
 .section .rodata
 .align 4
+.global gdt64_code_offset
+.global gdt64_data_offset
+.global gdt64_pointer
+
 gdt64:
     .quad 0 // zero entry
 

@@ -1,5 +1,6 @@
 const VGA_BUFFER_ADDR: usize = 0x0b8000;
 
+
 use core::{
     ptr::{read_volatile, write_volatile}, 
     fmt::{self, Write}
@@ -105,12 +106,13 @@ impl Terminal {
 
         let index: isize = (pos.0 + (pos.1 * self.width)) as isize;
         let character: ScreenChar = unsafe {
+            
             read_volatile(self.buffer.offset(index)) as ScreenChar
         };
         return Some(character);
     }
 
-    pub fn write(&mut self, pos: (usize, usize), val: u8, overwrite_attr: Option<CharAttr>) {
+    pub fn write(&mut self, pos: (usize, usize), val: u8, overwrite_attr: Option<CharAttr>) {        
         if pos.0 > self.width || pos.1 > self.height {
             return;
         }

@@ -9,7 +9,7 @@ iso: kernel
 	@grub-mkrescue -o build/os.iso build/isofiles 2> /dev/null
 
 run: iso
-	@qemu-system-x86_64 -cdrom build/os.iso -accel tcg 
+	@qemu-system-x86_64 -cdrom build/os.iso -accel tcg -d int -no-reboot
 
 clean:
 	cargo clean

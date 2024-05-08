@@ -1,7 +1,7 @@
-// https://www.gnu.org/software/grub/manual/multiboot2/multiboot.pdf
-
 const HEADER_MAGIC: u32 = 0xE85250D6;
 const HEADER_ARCH:  u32 = 0;
+
+use super::{REQUESTS, RequestType};
 
 #[repr(C, align(8))]
 struct HeaderTag {
@@ -11,12 +11,32 @@ struct HeaderTag {
 }
 
 #[repr(C)]
+struct MultibootInfoTag {
+    header: HeaderTag,
+    requests: RequestType,
+}
+
+#[repr(C)]
 struct MultibootHeader {
     magic: u32,
     architecture: u32,
     header_length: u32,
     checksum: u32,
+    multiboot_info_request: MultibootInfoTag,
     end_tag: HeaderTag
+}
+
+macro_rules! info_tag {
+    () => {
+        MultibootInfoTag {
+            header: HeaderTag {
+                tag: 1,
+                flags: 0,
+                size: core::mem::size_of::<MultibootInfoTag>() as u32
+            },
+            requests: REQUESTS
+        }
+    }
 }
 
 macro_rules! tag_end {
@@ -41,6 +61,7 @@ macro_rules! header_checksum {
     };
 }
 
+
 #[link_section = ".boot.multiboot"]
 #[no_mangle]
 static MULTIBOOT_HEADER: MultibootHeader = MultibootHeader {
@@ -48,6 +69,7 @@ static MULTIBOOT_HEADER: MultibootHeader = MultibootHeader {
     architecture:  HEADER_ARCH,
     header_length: sizeof_multiboot_header!(),
     checksum:      header_checksum!(),
+    multiboot_info_request: info_tag!(),
     end_tag:       tag_end!()
 };
 
