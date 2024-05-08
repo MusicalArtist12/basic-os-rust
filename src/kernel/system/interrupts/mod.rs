@@ -114,6 +114,8 @@ extern "C" fn unhandled() -> ! {
 }
 
 pub fn init_idt() {
+    irq::mask_all();
+    
     IDT.lock().set_handler(0, division_by_zero);
     IDT.lock().set_handler(1, single_step_interrupt);
     IDT.lock().set_handler(2, non_maskable_interrupt);

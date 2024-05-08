@@ -1,6 +1,5 @@
 use core::arch::{global_asm, asm};
 
-
 global_asm!(include_str!("gdt.s"), options(att_syntax));
 
 pub fn gdt64_code_offset() -> u16 {

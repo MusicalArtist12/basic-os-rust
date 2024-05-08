@@ -2,8 +2,7 @@ use crate::main;
 use crate::kernel::io::basic_vga_driver::{STDOUT, CharAttr, Color};
 use crate::println;
 use super::multiboot::multiboot_info::read_multiboot;
-use super::gdt::gdt64_code_offset;
-use super::interrupts::{init_idt, irq };
+use super::interrupts::init_idt;
 
 fn successful_boot() {
     STDOUT.lock().clear_screen();
@@ -40,12 +39,7 @@ fn successful_boot() {
 
 #[no_mangle]
 pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
-    
- 
-    irq::mask_all();
-
     init_idt();
-
     successful_boot();
 
     STDOUT.lock().change_color(CharAttr::new(Color::White, Color::Black));

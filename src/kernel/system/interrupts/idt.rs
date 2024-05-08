@@ -13,7 +13,6 @@ struct Idtr {
     base: u64
 }
 
-
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Entry {

@@ -1,6 +1,5 @@
 const VGA_BUFFER_ADDR: usize = 0x0b8000;
 
-
 use core::{
     ptr::{read_volatile, write_volatile}, 
     fmt::{self, Write}
