@@ -85,7 +85,14 @@ impl TagPtr {
 }
 
 pub fn read_multiboot(addr: u32) {
-    
+    unsafe {
+        let header = &*(addr as *const InfoHeader);
+        println!("addr: {:#x}", addr as u32);
+        println!("size:      {:#x}", header.total_size);
+        println!("reserved:  {:#b}\n", header.reserved);
+    }
+
+    /* 
     unsafe {
         let header = &*(addr as *const InfoHeader);
 
@@ -126,5 +133,5 @@ pub fn read_multiboot(addr: u32) {
 
         }
     }
-    
+    */
 }

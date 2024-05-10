@@ -41,7 +41,8 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
     successful_boot();
 
     STDOUT.lock().change_color(CharAttr::new(Color::White, Color::Black));
-    // read_multiboot(multiboot_information_address as u32);
+    
+    read_multiboot(multiboot_information_address as u32);
     
 
     main();

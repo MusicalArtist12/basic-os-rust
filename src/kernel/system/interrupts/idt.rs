@@ -1,4 +1,5 @@
 use core::arch::asm;
+use core::fmt::Debug;
 use crate::kernel::system::gdt::gdt64_code_offset;
 use crate::kernel::sync::mutex::Mutex;
 
@@ -15,6 +16,7 @@ pub struct ExceptionStackFrame {
     stack_pointer: u64,
     stack_segment: u64,
 }
+
 
 #[repr(C, packed)]
 struct Idtr {
@@ -128,3 +130,4 @@ impl Idt {
 
 static IDTR: Mutex<Idtr> = Mutex::new(Idtr {limit: 0, base: 0});
 pub static IDT: Mutex<Idt> = Mutex::new(Idt::new());
+
