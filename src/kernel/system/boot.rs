@@ -42,8 +42,15 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
 
     STDOUT.lock().change_color(CharAttr::new(Color::White, Color::Black));
     
-    read_multiboot(multiboot_information_address as u32);
+    // read_multiboot(multiboot_information_address as u32);
     
+    let addr = u64::MAX;
+    unsafe {
+        let my_val = addr as *const u64;
+        println!("{}", &*my_val);
+    }
+    
+
 
     main();
 

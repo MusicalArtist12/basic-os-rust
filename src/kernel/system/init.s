@@ -4,6 +4,7 @@
 
 start:
     cli 
+    mov %ebx, %edi          // pass multiboot address information to _start
     movl $stack_top, %esp
     
     call check_multiboot
@@ -14,10 +15,7 @@ start:
     call enable_paging
 
     lgdt (gdt64_pointer)
-
-    ljmp $gdt64_code_offset, $fix_cs
-
-fix_cs:    
+    
     movw $gdt64_data_offset, %ax
     movw %ax, %ds
     movw %ax, %es
@@ -25,7 +23,11 @@ fix_cs:
     movw %ax, %gs
     movw %ax, %ss
 
-    mov %ebx, %edi          // pass multiboot address information to _start
+    ljmp $gdt64_code_offset, $fix_cs
+
+fix_cs:    
+
+
     jmp _start
 
     hlt

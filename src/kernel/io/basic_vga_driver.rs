@@ -66,6 +66,9 @@ impl Terminal {
         if val == b'\n' {
             self.newline();
         }
+        else if val == b'\t' {
+            self.print_tab();
+        }
         else {
             self.write((self.column_idx, self.height - 1), val, None);
             self.column_idx += 1;
@@ -86,6 +89,12 @@ impl Terminal {
         }
 
         self.column_idx = 0;
+    }
+
+    fn print_tab(&mut self) {
+        for _ in 0..4 {
+            self.write_char(' ').unwrap();
+        }
     }
     
     pub const fn vga_text_mode(def_attr: CharAttr) -> Terminal {

@@ -29,8 +29,6 @@ struct MultibootHeader {
 }
 
 
-
-
 macro_rules! header_checksum {
     () => {
         -((HEADER_MAGIC + HEADER_ARCH + size_of::<MultibootHeader>() as u32) as i32) as u32
