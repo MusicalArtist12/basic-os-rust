@@ -1,18 +1,20 @@
+use core::unreachable;
+
 use crate::main;
 use super::io::basic_vga_driver::{CharAttr, Color};
 use super::io::STDOUT;
 use super::io::pic;
 
-use crate::println;
+use crate::{println, cli, hlt};
 use super::interrupts::set_interrupt_handlers;
-use super::multiboot::multiboot_info::read_multiboot;
+use super::multiboot::MultibootInfo;
 
 fn successful_boot() {
     STDOUT.lock().clear_screen();
     println!("Boot Successful! Here's a {}", "balloon!");
   
     STDOUT.lock().change_color(CharAttr::new(Color::Red, Color::Black));
-    
+    /* 
     println!(r#"
        _..._  ,s$$$s.
     .$$$$$$$s$$ss$$$$,
@@ -36,7 +38,7 @@ fn successful_boot() {
               ;
              '
     "#);
-
+    */
 
     STDOUT.lock().change_color(CharAttr::new(Color::White, Color::Black));
     
@@ -44,16 +46,21 @@ fn successful_boot() {
 }
 
 #[no_mangle]
-pub extern "C" fn _start(_multiboot_information_address: usize) -> ! {
+pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
     pic::initialize(0x20, 0x28);
 
     set_interrupt_handlers();
 
     successful_boot();
 
-    // read_multiboot(multiboot_information_address as u32);
-    
+    let info = unsafe { MultibootInfo::new(multiboot_information_address) };
+    info.log_tags();
+
     main();
 
     loop { }
+
+    cli!();
+    hlt!();
+    unreachable!();
 }

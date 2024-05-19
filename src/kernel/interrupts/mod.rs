@@ -4,7 +4,7 @@ mod entry;
 use idt::{Idt, Idtr};
 use core::arch::asm;
 use super::sync::mutex::Mutex;
-use crate::println;
+use crate::{println, sti};
 
 pub type HandlerFunc = extern "C" fn() -> !;
 
@@ -35,20 +35,6 @@ pub enum CPUExceptions {
     SIMDFloatingPointException,
     VirtualizationException,
     ControlProtectionException
-}
-
-#[macro_export]
-macro_rules! sti {
-    () => {
-        unsafe { core::arch::asm!("sti"); }
-    };
-}
-
-#[macro_export]
-macro_rules! cli {
-    () => {
-        unsafe { core::arch::asm!("cli"); }
-    };
 }
 
 #[macro_export]

@@ -1,6 +1,7 @@
 use core::arch::asm;
 use crate::kernel::interrupts::{IDT, ExceptionStackFrame};
 use crate::{isr_wrapper, println};
+use super::io_port::{inb, outb};
 
 pub fn mask_all() {
     unsafe {
@@ -14,26 +15,6 @@ pub fn mask_all() {
     }
 }
 
-unsafe fn outb(port: u16, command: u8) {
-    asm!(
-        "outb {x}, %dx", 
-        in("dx") port, 
-        x = in(reg_byte) command,
-        options(att_syntax)
-    );
-}
-
-
-unsafe fn inb(port: u16) -> u8 {
-    let mut val: u8;
-    asm! (
-        "inb %dx, {}",
-        out(reg_byte) val,
-        in("dx") port,
-        options(att_syntax)
-    );
-    return val;
-}
 
 const PIC1_COMMAND: u16 = 0x20;
 const PIC1_DATA: u16 = 0x21;

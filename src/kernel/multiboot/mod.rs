@@ -3,6 +3,9 @@
 mod multiboot_header;
 pub mod multiboot_info;
 
+pub use multiboot_info::MultibootInfo;
+
+
 use multiboot_info::TagID;
 
 type RequestType = [TagID; 2];

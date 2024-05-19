@@ -40,13 +40,7 @@ impl<T> Mutex<T> {
 
 }
 
-
 impl<'a, T: ?Sized> Token<'a, T> {
-
-    pub fn get_mut(&mut self) -> &mut T {
-        unsafe { &mut *self.data }
-    }
-
     pub unsafe fn get_ptr(&mut self) -> *const T {
         self.data
     }
@@ -67,9 +61,8 @@ impl<'a, T: ?Sized> Deref for Token<'a, T> {
 }
 
 impl<'a, T: ?Sized> DerefMut for Token<'a, T> {
-
     fn deref_mut(&mut self) -> &mut T {
-       self.get_mut()
+        unsafe { &mut *self.data }
     }
 }
 
