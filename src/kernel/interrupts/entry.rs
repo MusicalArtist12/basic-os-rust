@@ -1,35 +1,12 @@
-use core::arch::asm;
-use core::fmt::Debug;
-use crate::kernel::system::gdt::gdt64_code_offset;
-use crate::kernel::sync::mutex::Mutex;
-
-pub type HandlerFunc = extern "C" fn() -> !;
-
-pub struct Idt([Entry; 256]);
-
-#[derive(Debug)]
-#[repr(C)]
-pub struct ExceptionStackFrame {
-    instruction_pointer: u64,
-    code_segment: u64,
-    cpu_flags: u64,
-    stack_pointer: u64,
-    stack_segment: u64,
-}
-
-
-#[repr(C, packed)]
-struct Idtr {
-    limit: u16,
-    base: u64
-}
+use crate::kernel::gdt::gdt64_code_offset;
+use super::HandlerFunc;
 
 #[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Entry {
     pointer_low: u16,
     gdt_selector: u16,
-    options: EntryOptions,
+    pub options: EntryOptions,
     pointer_middle: u16,
     pointer_high: u32,
     reserved: u32,
@@ -73,7 +50,7 @@ impl EntryOptions {
 
 impl Entry {
 
-    fn new(handler: HandlerFunc) -> Self {
+    pub fn new(handler: HandlerFunc) -> Self {
         let pointer = handler as u64;
         Entry {
             gdt_selector: gdt64_code_offset(),
@@ -85,7 +62,7 @@ impl Entry {
         }
     }
 
-    const fn unhandled() -> Self {
+    pub const fn unhandled() -> Self {
         Entry {
             gdt_selector: 0,
             pointer_low: 0,
@@ -96,38 +73,3 @@ impl Entry {
         }
     }
 }
-
-impl Idt {
-    pub const fn new() -> Idt {
-        Idt([Entry::unhandled(); 256])
-    }
-
-    pub fn set_handler(&mut self, entry: u8, handler: HandlerFunc) -> &mut EntryOptions {
-        // println!("setting {} for {}", entry, (self as *const Idt) as u64);
-        
-        self.0[entry as usize] = Entry::new(handler);
-        &mut self.0[entry as usize].options
-    }
-
-    pub fn load(& self) {
-        
-        IDTR.lock().get_mut().base = self as *const _ as u64;
-        IDTR.lock().get_mut().limit = core::mem::size_of::<Self>() as u16 - 1;  
-
-        // println!("loading addr: {:#x}", self as *const _ as u64);
-        
-        unsafe {    
-            let addr = IDTR.lock().get_ptr();
-            // println!("IDTR addr: {:#x}", addr as u64);
-
-            asm!(r#"
-                lidt [{}]
-                sti
-            "#, in(reg) addr);
-        }
-    }
-}
-
-static IDTR: Mutex<Idtr> = Mutex::new(Idtr {limit: 0, base: 0});
-pub static IDT: Mutex<Idt> = Mutex::new(Idt::new());
-

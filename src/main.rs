@@ -13,5 +13,5 @@ fn on_panic(_panic_info: &PanicInfo) -> ! {
 }
 
 pub fn main() {
-
+    println!("Welcome to the Main Function!");
 }

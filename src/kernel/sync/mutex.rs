@@ -4,6 +4,9 @@ use core::{
     ops::{Deref, DerefMut}
 };
 
+// writing to a mutex is a critical section - do not interrupt
+use crate::{sti, cli};
+
 // token that guarantees mutual exclusion to whatever holds it
 pub struct Token<'a, T: ?Sized + 'a> {
     lock: &'a AtomicBool,
@@ -21,12 +24,12 @@ impl<T> Mutex<T> {
             data: UnsafeCell::new(data),
             lock: AtomicBool::new(false)
         }
-       
     }
 
     pub fn lock(&self) -> Token<T> {
         loop {
             if self.lock.compare_exchange_weak(false, true, Ordering::Acquire, Ordering::Relaxed).is_ok() {
+                cli!();
                 return Token {
                     lock: &self.lock,
                     data: self.data.get()
@@ -35,13 +38,8 @@ impl<T> Mutex<T> {
         }
     }
 
-    pub unsafe fn bypass_lock(&self) -> *mut T {
-        self.data.get()
-    }
 }
 
-unsafe impl<T> Sync for Mutex<T> {}
-unsafe impl<T> Send for Mutex<T> {}
 
 impl<'a, T: ?Sized> Token<'a, T> {
 
@@ -57,6 +55,7 @@ impl<'a, T: ?Sized> Token<'a, T> {
 impl<'a, T: ?Sized> Drop for Token<'a, T> {
     fn drop(&mut self) {
         self.lock.store(false, Ordering::Release);
+        sti!();
     }
 }
 
@@ -73,6 +72,9 @@ impl<'a, T: ?Sized> DerefMut for Token<'a, T> {
        self.get_mut()
     }
 }
+
+unsafe impl<T> Sync for Mutex<T> {}
+unsafe impl<T> Send for Mutex<T> {}
 
 unsafe impl<T: ?Sized + Sync> Sync for Token<'_, T> {}
 unsafe impl<T: ?Sized + Send> Send for Token<'_, T> {}

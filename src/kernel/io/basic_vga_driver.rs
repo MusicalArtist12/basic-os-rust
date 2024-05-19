@@ -4,7 +4,6 @@ use core::{
     ptr::{read_volatile, write_volatile}, 
     fmt::{self, Write}
 };
-use crate::kernel::sync::mutex::Mutex;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -163,22 +162,3 @@ impl fmt::Write for Terminal {
     }
 }
 
-pub static STDOUT: Mutex<Terminal> = Mutex::new(
-    Terminal::vga_text_mode(CharAttr::new(Color::White, Color::Black))
-);
-
-#[macro_export]
-macro_rules! print {
-    ($($arg:tt)*) => ($crate::kernel::io::basic_vga_driver::_print(format_args!($($arg)*)));
-}
-
-#[macro_export]
-macro_rules! println {
-    () => ($crate:::print!("\n"));
-    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
-}
-
-pub fn _print(args: fmt::Arguments) {
-    
-    STDOUT.lock().write_fmt(args).unwrap();
-}
