@@ -1,12 +1,12 @@
 use core::unreachable;
 
-use crate::main;
+use crate::{main, sti};
 use super::io::basic_vga_driver::{CharAttr, Color};
 use super::io::STDOUT;
 use super::io::pic;
 
 use crate::{println, cli, hlt};
-use super::interrupts::set_interrupt_handlers;
+use super::interrupts::load_interrupt_handlers;
 use super::multiboot::MultibootInfo;
 
 fn successful_boot() {
@@ -49,7 +49,9 @@ fn successful_boot() {
 pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
     pic::initialize(0x20, 0x28);
 
-    set_interrupt_handlers();
+    load_interrupt_handlers();
+
+    sti!();
 
     successful_boot();
 

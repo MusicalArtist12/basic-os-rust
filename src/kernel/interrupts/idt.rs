@@ -38,7 +38,6 @@ impl Idt {
 
             asm!(r#"
                 lidt [{}]
-                sti
             "#, in(reg) addr);
         }
     }

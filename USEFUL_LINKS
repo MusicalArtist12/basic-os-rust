@@ -11,3 +11,6 @@ goals: write a kernel with as few external modules as possible
             "--script=cfg/ld/x86_64.ld"
         ]
     },
+
+https://wiki.osdev.org/Keyboard
+https://wiki.osdev.org/Text_Mode_Cursor

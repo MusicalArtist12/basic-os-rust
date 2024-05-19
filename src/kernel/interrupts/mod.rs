@@ -96,10 +96,9 @@ extern "C" fn double_fault_handler(stack_frame: &ExceptionStackFrame) {
 }
 
 
-pub fn set_interrupt_handlers() {
+pub fn load_interrupt_handlers() {
     IDT.lock().set_handler(CPUExceptions::DoubleFault as u8, isr_wrapper!(double_fault_handler));
 
     IDT.lock().load(); 
 
-    sti!();
 }
