@@ -4,7 +4,7 @@ mod entry;
 use idt::{Idt, Idtr};
 use core::arch::asm;
 use super::sync::mutex::Mutex;
-use crate::{println, sti};
+use crate::println;
 
 pub type HandlerFunc = extern "C" fn() -> !;
 

@@ -25,5 +25,5 @@ fn on_panic(panic_info: &PanicInfo) -> ! {
 pub fn main() {
     println!("Welcome to the Main Function!");
 
-   assert!(2 + 2 == 5);
+    // assert!(2 + 2 == 5);
 }
