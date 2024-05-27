@@ -1,4 +1,4 @@
-use crate::kernel::gdt::gdt64_code_offset;
+use super::super::gdt::gdt64_code_offset;
 use super::HandlerFunc;
 
 #[derive(Clone, Copy)]

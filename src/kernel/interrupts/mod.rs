@@ -1,15 +1,11 @@
 mod idt;
 mod entry;
 
-use idt::{Idt, Idtr};
 use core::arch::asm;
-use super::sync::mutex::Mutex;
-use crate::println;
+use idt::{Idt, Idtr};
+use crate::kernel::sync::mutex::Mutex;
 
 pub type HandlerFunc = extern "C" fn() -> !;
-
-static IDTR: Mutex<Idtr> = Mutex::new(Idtr::new());
-pub static IDT: Mutex<Idt> = Mutex::new(Idt::new());
 
 #[repr(u8)]
 pub enum CPUExceptions {
@@ -90,15 +86,14 @@ pub struct ExceptionStackFrame {
 }
 
 
-extern "C" fn double_fault_handler(stack_frame: &ExceptionStackFrame) {
-    println!("\nEXCEPTION: DOUBLE FAULT\n{:#?}\n", stack_frame);
-    loop {};
-}
+static IDTR: Mutex<Idtr> = Mutex::new(Idtr::new());
+pub static IDT: Mutex<Idt> = Mutex::new(Idt::new());
 
+extern "C" fn double_fault_handler(stack_frame: &ExceptionStackFrame) {
+    panic!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
+}
 
 pub fn load_interrupt_handlers() {
     IDT.lock().set_handler(CPUExceptions::DoubleFault as u8, isr_wrapper!(double_fault_handler));
-
     IDT.lock().load(); 
-
 }

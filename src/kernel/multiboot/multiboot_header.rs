@@ -35,7 +35,6 @@ macro_rules! header_checksum {
     };
 }
 
-
 #[link_section = ".boot.multiboot"]
 #[no_mangle]
 static MULTIBOOT_HEADER: MultibootHeader = MultibootHeader {

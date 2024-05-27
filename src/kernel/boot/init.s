@@ -1,6 +1,7 @@
 .global start
 .section .init, "ax", @progbits
 .code32
+.extern stack_top
 
 start:
     cli 

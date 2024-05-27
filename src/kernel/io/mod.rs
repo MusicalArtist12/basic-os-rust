@@ -1,12 +1,12 @@
 pub mod basic_vga_driver;
 pub mod pic;
-pub mod file;
 mod io_port;
 
-use super::sync::Mutex;
+use crate::kernel::sync::Mutex;
 use basic_vga_driver::{Terminal, Color, CharAttr};
 use core::fmt::{self, Write};
 
+#[allow(dead_code)]
 pub static STDOUT: Mutex<Terminal> = Mutex::new(
     Terminal::vga_text_mode(CharAttr::new(Color::White, Color::Black))
 );

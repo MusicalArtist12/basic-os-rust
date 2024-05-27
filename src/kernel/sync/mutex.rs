@@ -1,7 +1,5 @@
 use core::{
-    cell::UnsafeCell,
-    sync::atomic::{AtomicBool, Ordering},
-    ops::{Deref, DerefMut}
+    cell::UnsafeCell, ops::{Deref, DerefMut}, sync::atomic::{AtomicBool, Ordering}
 };
 
 // writing to a mutex is a critical section - do not interrupt
@@ -15,7 +13,7 @@ pub struct Token<'a, T: ?Sized + 'a> {
 
 pub struct Mutex<T> {
     data: UnsafeCell<T>,
-    lock: AtomicBool
+    lock: AtomicBool,
 }
 
 impl<T> Mutex<T> {
@@ -38,6 +36,9 @@ impl<T> Mutex<T> {
         }
     }
 
+    pub fn force_unlock(&self) {
+        self.lock.store(false, Ordering::Release);
+    }
 }
 
 impl<'a, T: ?Sized> Token<'a, T> {
@@ -68,7 +69,3 @@ impl<'a, T: ?Sized> DerefMut for Token<'a, T> {
 
 unsafe impl<T> Sync for Mutex<T> {}
 unsafe impl<T> Send for Mutex<T> {}
-
-unsafe impl<T: ?Sized + Sync> Sync for Token<'_, T> {}
-unsafe impl<T: ?Sized + Send> Send for Token<'_, T> {}
-

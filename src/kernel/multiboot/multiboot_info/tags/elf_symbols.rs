@@ -1,7 +1,9 @@
+use core::{cmp::Ordering, fmt::Debug};
+
 use super::HeaderTag;
 use crate::println;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 #[repr(C)]
 pub struct ELFSymbols {
     pub header: HeaderTag,
@@ -11,6 +13,9 @@ pub struct ELFSymbols {
     entries: u8
 }
 
+
+#[derive(Copy, Clone, Debug)]
+#[repr(u32)]
 pub enum ELFSectionType {
     Unused,
     ProgramSection,
@@ -26,15 +31,17 @@ pub enum ELFSectionType {
     DynamicLoaderSymbolTable,
     EnvironmentSpecific,
     ProcessorSpecific,
+    OutOfBounds
 }
 
+#[derive(PartialEq, Eq, Clone, Copy)]
 pub struct ELFSectionHeader {
     entsize: u32,
     ptr: *const u8
 }
 
 #[repr(C, packed)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 struct ELF32SectionHeader {
     name: u32,
     typ: u32,
@@ -49,7 +56,7 @@ struct ELF32SectionHeader {
 }
 
 #[repr(C, packed)]
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone)]
 struct ELF64SectionHeader {
     name: u32,
     typ: u32,
@@ -63,6 +70,41 @@ struct ELF64SectionHeader {
     entsize: u64
 }
 
+#[derive(Copy, Clone)]
+pub struct ELFSectionIter {
+    current_section: *const u8,
+    remaining: u32,
+    entsize: u32
+}
+
+
+impl ELFSymbols {
+    pub fn get_section_headers(&self) -> ELFSectionIter {
+        ELFSectionIter {
+            current_section: &self.entries,
+            remaining: self.num,
+            entsize: self.entsize
+        }
+    }
+
+    pub fn print_headers(&self) {
+        for i in self.get_section_headers() {
+            println!("addr: {:#x} size: {:#x} flags {:#x} type {:#?}", i.addr(), i.size(), i.flags(), i.typ());
+        }
+    }
+}
+
+impl Debug for ELFSymbols {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("ELFSymbols")
+            .field("header", &self.header)
+            .field("num", &self.num)
+            .field("entsize", &self.entsize)
+            .field("shndx", &self.shndx)
+            .finish()
+    }
+}
+
 impl ELFSectionHeader {
     fn cast_as_32(&self) -> &'static ELF32SectionHeader {
         return unsafe { &*(self.ptr as *const ELF32SectionHeader) }
@@ -72,7 +114,7 @@ impl ELFSectionHeader {
         return unsafe { &*(self.ptr as *const ELF64SectionHeader) }
     }
 
-    fn name(&self) -> u32 {
+    pub fn name(&self) -> u32 {
         match self.entsize {
             32 => { self.cast_as_32().name },
             64 => { self.cast_as_64().name },
@@ -80,7 +122,7 @@ impl ELFSectionHeader {
         }
     }
     
-    fn addr(&self) -> u64 {
+    pub fn addr(&self) -> u64 {
         match self.entsize {
             32 => { self.cast_as_32().addr as u64 },
             64 => { self.cast_as_64().addr },
@@ -88,15 +130,21 @@ impl ELFSectionHeader {
         }
     }
 
-    fn typ(&self) -> u32 {
-        match self.entsize {
+    pub fn typ(&self) -> ELFSectionType {
+        let typ = match self.entsize {
             32 => { self.cast_as_32().typ },
             64 => { self.cast_as_64().typ },
             _ => { panic!() }  
+        };
+
+        if typ >= ELFSectionType::OutOfBounds as u32 {
+            panic!("ELFSectionType out of bounds!");
         }
+
+        unsafe { core::mem::transmute::<u32, ELFSectionType>(typ) }
     }
 
-    fn flags(&self) -> u64 {
+    pub fn flags(&self) -> u64 {
         match self.entsize {
             32 => { self.cast_as_32().flags as u64 },
             64 => { self.cast_as_64().flags },
@@ -104,7 +152,7 @@ impl ELFSectionHeader {
         }
     }
 
-    fn size(&self) -> u64 {
+    pub fn size(&self) -> u64 {
         match self.entsize {
             32 => { self.cast_as_32().flags as u64 },
             64 => { self.cast_as_64().flags },
@@ -113,10 +161,24 @@ impl ELFSectionHeader {
     }
 }
 
-pub struct ELFSectionIter {
-    current_section: *const u8,
-    remaining: u32,
-    entsize: u32
+impl PartialOrd for ELFSectionHeader {
+    fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
+        if self.addr() > other.addr() {
+            Some(Ordering::Greater)
+        }
+        else if self.addr() == other.addr() {
+            Some(Ordering::Equal)
+        }
+        else {
+            Some(Ordering::Less)
+        }
+    }
+}
+
+impl Ord for ELFSectionHeader {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).expect("none")
+    }
 }
 
 impl Iterator for ELFSectionIter {
@@ -138,21 +200,4 @@ impl Iterator for ELFSectionIter {
             return None;
         }
     }
-}
-
-impl ELFSymbols {
-    pub fn get_section_headers(&self) -> ELFSectionIter {
-        ELFSectionIter {
-            current_section: &self.entries,
-            remaining: self.num,
-            entsize: self.entsize
-        }
-    }
-
-    pub fn print_headers(&self) {
-        for i in self.get_section_headers() {
-            println!("addr: {:#x} size: {:#x} flags {:#x}", i.addr(), i.size(), i.flags());
-        }
-    }
-
 }

@@ -69,6 +69,10 @@ impl Terminal {
             self.print_tab();
         }
         else {
+            if self.column_idx > self.width {
+                self.newline();
+            }
+
             self.write((self.column_idx, self.height - 1), val, None);
             self.column_idx += 1;
         }

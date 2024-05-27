@@ -1,149 +1,74 @@
-pub mod multiboot_info_tags;
-pub use multiboot_info_tags::*;
-pub mod elf_tag;
-pub use elf_tag::*;
+pub mod tags;
+pub use tags::*;
 
-use core::mem::size_of;
-use crate::println;
+use core::fmt::Debug;
 
 #[derive(Copy, Clone, Debug)]
-#[repr(u32)]
-pub enum TagID {
-    Terminal = 0,
-    BootCommandLine,
-    BootLoaderName,
-    Modules,
-    MemInfo,
-    BIOSBootInfo,
-    MemMap,
-    VBEInfo,
-    FramebufferInfo,
-    ELFSymbols,
-    APMTable,
-    EFI32SysTablePtr,
-    EFI64SysTablePtr,
-    SMBIOSTables,
-    ACPIOldRSDP,
-    ACPINewRSDP,
-    NetworkingInfo,
-    EFIMemMap,
-    EFIBootServicesUncalled,
-    EFI32ImageHandlePtr,
-    EFI64ImageHandlePtr,
-    ImageLoadBasePhysAddr,
-    OutOfBounds
-}
-
-#[derive(Copy, Clone, Debug)]
-pub enum TagPtr {
-    MemInfo(&'static MemInfo),
-    MemMap(&'static MemMap),
-    ELFSymbols(&'static ELFSymbols),
-    Terminal,
-    None
-}
-
-impl TagPtr {
-    pub unsafe fn new(header: &HeaderTag, addr: usize) -> Self {
-
-        match header.typ {
-            TagID::Terminal => {
-                TagPtr::Terminal
-            },
-            TagID::MemInfo => {
-                TagPtr::MemInfo(&*(addr as *const MemInfo))
-            },
-            TagID::MemMap => {
-                TagPtr::MemMap(&*(addr as *const MemMap))
-            },
-            TagID::ELFSymbols => {
-                TagPtr::ELFSymbols(&*(addr as *const ELFSymbols))
-            }
-            _ => {
-                TagPtr::None
-            }
-        }
-    }
-
-}
-
 #[repr(C)]
 pub struct MultibootInfoHeader {
-    size: u32,
+    pub size: u32,
     reserved: u32,
+    tag_start: u8
 }
 
+#[derive(Copy, Clone, Debug)]
 pub struct MultibootInfo<'a> {
-    header: &'a MultibootInfoHeader,
-    tags: [TagPtr; 100]
+    pub header: &'a MultibootInfoHeader,
+}
+
+pub struct TagIter {
+    current_section: *const u8,
+    remaining: u32,    
+}
+
+impl Iterator for TagIter {
+    type Item = TagPtr;
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.remaining > 0 {
+            unsafe {
+                let header = HeaderTag::read(self.current_section);
+                let tag = TagPtr::new(header, self.current_section);
+                
+                let mut increment = header.size;
+                while (increment % 8) != 0 {
+                    increment += 1;
+                }
+
+                if increment == 0 {
+                    return None;
+                }
+
+                self.current_section = self.current_section.offset(increment as isize);
+                self.remaining -= increment;
+
+                Some(tag)
+            }
+        }
+        else {
+            None
+        }
+    }
 }
 
 impl<'a> MultibootInfo<'a> {
-    pub unsafe fn new(addr: usize) -> Self {
-        let mut info: MultibootInfo = MultibootInfo {
-            header: &*(addr as *const MultibootInfoHeader),
-            tags: [TagPtr::None; 100]
+    pub const fn new(addr: usize) -> Self {
+        let info: MultibootInfo = MultibootInfo {
+            header: unsafe { &*(addr as *const MultibootInfoHeader) },
         };
-
-        if info.header.reserved != 0 {
-            panic!("multiboot header may be currupted");
-        }
-
-        let mut ptr = addr + size_of::<MultibootInfoHeader>();
-        let mut count = 0;
-
-        loop {
-            let header = HeaderTag::read(ptr);
-            let tag = TagPtr::new(header, ptr);
-
-            match tag {
-                TagPtr::None => {
-
-                },
-                TagPtr::Terminal => {
-                    break;
-                },
-                _ => {
-                    info.tags[count] = tag;
-                    count = count + 1;
-                }
-            }
-
-            if count == info.tags.len() {
-                break;
-            }
-
-            ptr = ptr + header.size as usize;
-            
-            while (ptr % 8) != 0 {
-                ptr = ptr + 1;
-            }
-        }
-
-        println!("count: {}", count);
 
         info
     }
 
-    pub fn log_tags(&self) {
-        for i in self.tags {
-            
-            match i {
-                TagPtr::MemMap(map) => {
-                    println!("{:#?}", i);
-                    map.print_map()
-                },
-                TagPtr::ELFSymbols(symbols) => {
-                    println!("{:#?}", i);
-                    symbols.print_headers();
-                }
-                TagPtr::None => {
-
-                },
-                _ => {
-                    // println!("{:#?}", i);
-                }
-            }
+    pub fn tags(&self) -> TagIter {
+        TagIter {
+            current_section: &self.header.tag_start,
+            remaining: self.header.size
         }
+    }
+
+    pub fn get_tag(&self, id: TagID) -> Option<TagPtr> {
+        self.tags().find(|&x| {
+            x.id() == id
+        })
     }
 }
