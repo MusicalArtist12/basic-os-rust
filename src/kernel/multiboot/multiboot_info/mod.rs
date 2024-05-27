@@ -3,6 +3,49 @@ pub use tags::*;
 
 use core::fmt::Debug;
 
+#[derive(Copy, Clone)]
+enum TagPtr {
+    MemInfo(&'static MemInfo),
+    MemMap(&'static MemMap),
+    ELFSymbols(&'static ELFSymbols),
+    Terminal,
+    Unhandled(&'static HeaderTag)
+}
+
+impl TagPtr {
+    pub unsafe fn new(header: &HeaderTag, addr: *const u8) -> Self {
+        match header.typ() {
+            TagID::Terminal => {
+                TagPtr::Terminal
+            },
+            TagID::MemInfo => {
+                TagPtr::MemInfo(&*(addr as *const MemInfo))
+            },
+            TagID::MemMap => {
+                TagPtr::MemMap(&*(addr as *const MemMap))
+            },
+            TagID::ELFSymbols => {
+                TagPtr::ELFSymbols(&*(addr as *const ELFSymbols))
+            }
+            _ => {
+                TagPtr::Unhandled(&*(addr as *const HeaderTag))
+            }
+        }
+    }
+
+    pub fn id(&self) -> TagID {
+        match self {
+            TagPtr::MemInfo(_) => { TagID::MemInfo },
+            TagPtr::MemMap(_) => { TagID::MemMap },
+            TagPtr::ELFSymbols(_) => { TagID::ELFSymbols },
+            TagPtr::Terminal => { TagID::Terminal },
+            Self::Unhandled(header) => { 
+                header.typ()
+            },
+        }
+    }
+}
+
 #[derive(Copy, Clone, Debug)]
 #[repr(C)]
 pub struct MultibootInfoHeader {
@@ -16,7 +59,7 @@ pub struct MultibootInfo<'a> {
     pub header: &'a MultibootInfoHeader,
 }
 
-pub struct TagIter {
+struct TagIter {
     current_section: *const u8,
     remaining: u32,    
 }
@@ -59,16 +102,43 @@ impl<'a> MultibootInfo<'a> {
         info
     }
 
-    pub fn tags(&self) -> TagIter {
+    fn tags(&self) -> TagIter {
         TagIter {
             current_section: &self.header.tag_start,
             remaining: self.header.size
         }
     }
 
-    pub fn get_tag(&self, id: TagID) -> Option<TagPtr> {
+    fn get_tag(&self, id: TagID) -> Option<TagPtr> {
         self.tags().find(|&x| {
             x.id() == id
         })
+    }
+
+    pub fn memmap(&self) -> Option<&MemMap> {
+        if let Some(TagPtr::MemMap(mem_map)) = self.get_tag(TagID::MemMap) {
+            Some(mem_map)
+        }
+        else {
+            None
+        }
+    }
+
+    pub fn meminfo(&self) -> Option<&MemInfo> {
+        if let Some(TagPtr::MemInfo(mem_info)) = self.get_tag(TagID::MemInfo) {
+            Some(mem_info)
+        }
+        else {
+            None
+        }
+    }
+
+    pub fn elfsymbols(&self) -> Option<&ELFSymbols> {
+        if let Some(TagPtr::ELFSymbols(mem_info)) = self.get_tag(TagID::ELFSymbols) {
+            Some(mem_info)
+        }
+        else {
+            None
+        }
     }
 }

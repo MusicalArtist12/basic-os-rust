@@ -13,7 +13,8 @@ use crate::cli;
 use crate::sti;
 
 use io::pic;
-use multiboot::MultibootInfo;
+use multiboot::*;
+use crate::println;
 
 #[macro_export]
 macro_rules! sti {
@@ -79,8 +80,14 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
     interrupts::load_interrupt_handlers();
     sti!();
 
-    let _info = MultibootInfo::new(multiboot_information_address);
+    let info = MultibootInfo::new(multiboot_information_address);
+
+    let memmap = info.memmap().expect("some");
     
+    for i in memmap.get_entries() {
+        println!("{:?}", i);
+    }
+
     main();
 
     cli!();
