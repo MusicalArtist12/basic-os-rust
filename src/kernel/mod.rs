@@ -108,8 +108,11 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
     );
 
     let mem = allocator.total_memory();
+    let used = allocator.used_space();
 
-    println!("{} GB", mem as f32 / (1024 * 1024 * 1024) as f32);
+    println!("{} KB", mem as f32 / (1024) as f32);
+    println!("{} KB used", used as f32 / (1024) as f32);
+    println!("{} KB available", (mem - used) as f32 / 1024 as f32);
 
     main();
 

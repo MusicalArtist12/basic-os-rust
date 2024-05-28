@@ -5,7 +5,7 @@ const NUM_FRAMES: usize = gigabytes!(4) / PAGE_SIZE;
 
 #[allow(dead_code)]
 #[repr(u8)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 
 enum FrameState {
     Free = 0x00,
@@ -37,6 +37,16 @@ impl FrameAllocatorSegment {
     pub fn set_frame(&mut self, frame: usize, state: FrameState) {
         assert!(self.handles_frame(frame));
         self.frames[frame - self.start_frame] = state;
+    }
+
+    pub fn used_space(&self) -> usize {
+        let mut count: usize = 0;
+        for i in self.frames {
+            if i != FrameState::Free {
+                count += 1;
+            }
+        };
+        count
     }
 }
 
@@ -148,12 +158,24 @@ impl FrameAllocator {
                 Some(segment) => {
                     count += segment.num_frames * PAGE_SIZE;
                 },
-                None => {
-
-                }
+                None => {}
             }
         };
 
+        count
+    }
+
+    pub fn used_space(&self) -> usize {
+        let mut count: usize = 0;
+        for i in 0..self.num_segments {
+            match self.segments[i] {
+                Some(segment) => {
+                    count += segment.used_space();
+                },
+                None => {}
+            }
+        };
+        
         count
     }
 }
