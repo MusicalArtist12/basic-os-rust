@@ -13,6 +13,6 @@ p3_table:
 p2_table:
     .skip 4096
 stack_bottom:
-    .skip 4096 * 1024
+    .skip 512 * 1024 * 1024
 stack_top:
 

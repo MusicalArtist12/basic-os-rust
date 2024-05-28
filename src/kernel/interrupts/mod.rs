@@ -93,7 +93,18 @@ extern "C" fn double_fault_handler(stack_frame: &ExceptionStackFrame) {
     panic!("EXCEPTION: DOUBLE FAULT\n{:#?}", stack_frame);
 }
 
+extern "C" fn general_protection_handler(stack_frame: &ExceptionStackFrame) {
+    panic!("EXCEPTION: GENERAL_PROTECTION\n{:#?}", stack_frame);
+}
+
+extern "C" fn page_fault_handler(stack_frame: &ExceptionStackFrame) {
+    panic!("EXCEPTION: PAGE_FAULT\n{:#?}", stack_frame);
+}
+
 pub fn load_interrupt_handlers() {
     IDT.lock().set_handler(CPUExceptions::DoubleFault as u8, isr_wrapper!(double_fault_handler));
+    IDT.lock().set_handler(CPUExceptions::GeneralProtectionFault as u8, isr_wrapper!(general_protection_handler));
+    IDT.lock().set_handler(CPUExceptions::PageFault as u8, isr_wrapper!(page_fault_handler));
+
     IDT.lock().load(); 
 }

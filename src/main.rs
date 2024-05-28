@@ -11,9 +11,9 @@ use crate::kernel::io::{basic_vga_driver::CharAttr, STDOUT, basic_vga_driver::Co
 #[panic_handler]
 fn on_panic(panic_info: &PanicInfo) -> ! {
     cli!();
-    STDOUT.force_unlock();
+    unsafe { STDOUT.force_unlock() };
     STDOUT.lock().change_color(CharAttr::new(Color::White, Color::Blue));
-    STDOUT.lock().clear_screen();
+    // STDOUT.lock().clear_screen();
     
     println!("oh no :(\n");
     println!("{:#?}", panic_info);

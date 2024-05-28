@@ -6,6 +6,7 @@ pub mod boot;
 pub mod gdt;
 pub mod mem;
 
+use crate::kernel::mem::frame_allocator::FrameAllocator;
 use crate::main;
 
 use crate::hlt;
@@ -83,10 +84,32 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
     let info = MultibootInfo::new(multiboot_information_address);
 
     let memmap = info.memmap().expect("some");
-    
+    let elfsymbols = info.elfsymbols().expect("some");
+
+    /* 
     for i in memmap.get_entries() {
-        println!("{:?}", i);
+        println!("{:x?}", i);
     }
+    */
+
+    let free_area = memmap.get_entries();
+    let kernel_start = elfsymbols.get_section_headers().min().expect("kernel_start").addr() as usize;
+    let kernel_end = elfsymbols.get_section_headers().max().expect("kernel_end").addr() as usize;
+    let multiboot_start = multiboot_information_address;
+    let multiboot_end = multiboot_start + info.header.size as usize;
+    
+    
+    let allocator = FrameAllocator::new(
+        multiboot_start,
+        multiboot_end,
+        kernel_start,
+        kernel_end,
+        free_area
+    );
+
+    let mem = allocator.total_memory();
+
+    println!("{} GB", mem as f32 / (1024 * 1024 * 1024) as f32);
 
     main();
 

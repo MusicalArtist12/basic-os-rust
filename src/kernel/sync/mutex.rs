@@ -36,7 +36,7 @@ impl<T> Mutex<T> {
         }
     }
 
-    pub fn force_unlock(&self) {
+    pub unsafe fn force_unlock(&self) {
         self.lock.store(false, Ordering::Release);
     }
 }
