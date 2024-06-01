@@ -18,7 +18,8 @@ struct FrameAllocatorSegment {
     // 4 GB per allocator max - uses 1 mb
     pub start_frame: usize,
     num_frames: usize,                  // max = NUM_FRAMES
-    frames: [FrameState; NUM_FRAMES]
+    frames: [FrameState; NUM_FRAMES],
+    num_used_frames: usize
 }
 
 impl FrameAllocatorSegment {
@@ -26,7 +27,8 @@ impl FrameAllocatorSegment {
         FrameAllocatorSegment {
             start_frame: start_frame,
             num_frames: num_frames,
-            frames: [FrameState::Free; NUM_FRAMES]
+            frames: [FrameState::Free; NUM_FRAMES],
+            num_used_frames: 0
         }
     }
 
@@ -36,18 +38,33 @@ impl FrameAllocatorSegment {
 
     pub fn set_frame(&mut self, frame: usize, state: FrameState) {
         assert!(self.handles_frame(frame));
+        if self.frames[frame - self.start_frame] == FrameState::Free &&
+            state != FrameState::Free {
+                self.num_used_frames += 1;
+        }
+
+        if self.frames[frame - self.start_frame] != FrameState::Free &&
+            state == FrameState::Free {
+                self.num_used_frames -= 1;
+            }
+
         self.frames[frame - self.start_frame] = state;
     }
 
-    pub fn used_space(&self) -> usize {
+    pub fn slow_used_space(&self) -> usize {
         let mut count: usize = 0;
         for i in self.frames {
             if i != FrameState::Free {
                 count += 1;
             }
         };
-        count
+        count * PAGE_SIZE
     }
+
+    pub fn used_space(&self) -> usize {
+        self.num_used_frames * PAGE_SIZE
+    }
+
 }
 
 pub struct FrameAllocator {
@@ -177,5 +194,19 @@ impl FrameAllocator {
         };
         
         count
+    }
+
+    pub fn slow_used_space(&self) -> usize {
+        let mut count: usize = 0;
+        for i in 0..self.num_segments {
+            match self.segments[i] {
+                Some(segment) => {
+                    count += segment.slow_used_space();
+                },
+                None => {}
+            }
+        };
+        
+        count  
     }
 }
