@@ -39,40 +39,6 @@ macro_rules! hlt {
     };
 }
 
-/* 
-fn successful_boot() {
-    STDOUT.lock().clear_screen();
-    println!("Boot Successful! Here's a {}", "balloon!");
-  
-    STDOUT.lock().change_color(CharAttr::new(Color::Red, Color::Black));
-    
-    println!(r#"
-       _..._  ,s$$$s.
-    .$$$$$$$s$$ss$$$$,
-    $$$sss$$$$s$$$$$$$
-    $$ss$$$$$$$$$$$$$$
-    '$$$s$$$$$$$$$$$$'
-     '$$$$$$$$$$$$$$'
-       S$$$$$$$$$$$'
-        '$$$$$$$$$'
-          '$$$$$'
-           '$$$'
-             ;
-            ;
-            ;            
-             ;
-            ,'
-            ;
-            ',
-             ',
-              ;
-             '
-    "#);
-    
-
-    STDOUT.lock().change_color(CharAttr::new(Color::White, Color::Black));
-}
-*/
 
 
 #[no_mangle]
@@ -99,7 +65,7 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
     let multiboot_end = multiboot_start + info.header.size as usize;
     
     
-    let allocator = FrameAllocator::new(
+    let mut allocator = FrameAllocator::new(
         multiboot_start,
         multiboot_end,
         kernel_start,
@@ -117,6 +83,30 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
     println!("{} MB available", (mem - used) as f32 / (1024 * 1024) as f32);
 
     main();
+
+    /* 
+    loop {
+        let frame = allocator.allocate_frame();
+
+        match frame {
+            None => {
+                // println!("{:?}", frame);
+                break;
+            },
+            Some(x) => {
+                if x.number % 1000 == 0 {
+                    println!("{:?}", x);
+                }
+
+                // allocator.deallocate_frame(x);
+                continue;
+            }
+        }
+    }
+
+    let used = allocator.used_space();
+    println!("{} MB available", (mem - used) as f32 / (1024 * 1024) as f32);
+    */
 
     cli!();
     hlt!();

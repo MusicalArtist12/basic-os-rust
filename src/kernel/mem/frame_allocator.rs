@@ -1,4 +1,4 @@
-use crate::{gigabytes, kernel::{MemoryArea, MemoryAreaIter}, kilobytes, println};
+use crate::{gigabytes, kernel::{MemoryArea, MemoryAreaIter}, kilobytes};
 
 const PAGE_SIZE: usize = kilobytes!(4);
 const NUM_FRAMES: usize = gigabytes!(4) / PAGE_SIZE;
@@ -13,13 +13,19 @@ enum FrameState {
     System = 0x02,
 }
 
+#[derive(Copy, Clone, Debug)]
+pub struct Frame {
+    pub number: usize
+}
+
 #[derive(Clone, Copy)]
 struct FrameAllocatorSegment {
     // 4 GB per allocator max - uses 1 mb
     pub start_frame: usize,
     num_frames: usize,                  // max = NUM_FRAMES
     frames: [FrameState; NUM_FRAMES],
-    num_used_frames: usize
+    num_used_frames: usize,
+    next_frame: usize
 }
 
 impl FrameAllocatorSegment {
@@ -28,7 +34,8 @@ impl FrameAllocatorSegment {
             start_frame: start_frame,
             num_frames: num_frames,
             frames: [FrameState::Free; NUM_FRAMES],
-            num_used_frames: 0
+            num_used_frames: 0,
+            next_frame: 0
         }
     }
 
@@ -65,12 +72,43 @@ impl FrameAllocatorSegment {
         self.num_used_frames * PAGE_SIZE
     }
 
+    pub fn allocate_frame(&mut self) -> Option<Frame> {
+        for i in self.next_frame..self.num_frames {
+            if self.frames[i] == FrameState::Free {
+                
+                self.next_frame = i + 1;
+                self.num_used_frames += 1;
+                //println!("{}", self.num_used_frames);
+                self.frames[i] = FrameState::Occupied;
+
+                return Some(Frame { 
+                    number: i + self.start_frame
+                });
+            }
+        }; 
+
+        None 
+    }
+
+    pub fn deallocate_frame(&mut self, frame: Frame) {
+        assert!(self.handles_frame(frame.number));
+        let index = frame.number - self.start_frame;
+
+        self.frames[index] = FrameState::Free;
+        if index < self.next_frame {
+            self.next_frame = index;
+        }
+    }
+
+    pub fn is_full(&self) -> bool {
+        self.num_used_frames == self.num_frames
+    }
+
 }
 
 pub struct FrameAllocator {
-    // 64 GB max
     num_segments: usize,
-    segments: [Option<FrameAllocatorSegment>; 16]
+    segments: [Option<FrameAllocatorSegment>; 64]
 }
 
 impl FrameAllocator {
@@ -83,7 +121,7 @@ impl FrameAllocator {
     ) -> Self {
         let mut allocator = FrameAllocator {
             num_segments: 0,
-            segments: [None; 16]
+            segments: [None; 64]
         };
 
         for area in free_areas {
@@ -98,10 +136,10 @@ impl FrameAllocator {
         let k_start_frame = kernel_start / PAGE_SIZE;
         let k_end_frame = kernel_end / PAGE_SIZE;
 
-        println!("mb start: {}", mb_start_frame);
-        println!("mb end: {}", mb_end_frame);
-        println!("kernel start: {}", k_start_frame);
-        println!("kernel end: {}", k_end_frame);
+        // println!("mb start: {}", mb_start_frame);
+        // println!("mb end: {}", mb_end_frame);
+        // println!("kernel start: {}", k_start_frame);
+        // println!("kernel end: {}", k_end_frame);
 
         for i in mb_start_frame..mb_end_frame {
             allocator.set_frame(i, FrameState::System);
@@ -111,12 +149,14 @@ impl FrameAllocator {
             allocator.set_frame(i, FrameState::System);
         }
 
+        /* 
         for i in 0..allocator.num_segments {
             match &allocator.segments[i] {
                 Some(x) => { println!("{} -> start: {}, size: {}",  i, x.start_frame, x.num_frames); },
                 None => { }
             }
         }
+        */
 
         allocator
     }
@@ -208,5 +248,37 @@ impl FrameAllocator {
         };
         
         count  
+    }
+
+    pub fn allocate_frame(&mut self) -> Option<Frame> {
+        for i in 0..self.segments.len() {
+            match self.segments[i] {
+                Some(_) => {
+                    if self.segments[i].as_mut().expect("").is_full() {
+                        continue;
+                    };
+                    return self.segments[i].as_mut().expect("").allocate_frame();
+                },
+                None => {
+                    return None;
+                }
+            }
+        }
+        None
+    }
+
+    pub fn deallocate_frame(&mut self, frame: Frame) {
+        for i in 0..self.segments.len() {
+            match self.segments[i] {
+                Some(_) => {
+                    if self.segments[i].as_mut().expect("").handles_frame(frame.number) {
+                        self.segments[i].as_mut().expect("").deallocate_frame(frame);
+                    }
+                },
+                None => {
+
+                }
+            }
+        }
     }
 }

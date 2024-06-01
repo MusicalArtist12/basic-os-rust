@@ -22,11 +22,34 @@ fn on_panic(panic_info: &PanicInfo) -> ! {
 }
 
 pub fn main() {
-    println!("Welcome to the Main Function!");
+    println!("Welcome to the Main Function! Here's a Balloon");
 
-    /* 
-    unsafe {
-        *(0xdeadbea8 as *mut u64) = 42;
-    };
-    */
+    STDOUT.lock().change_color(CharAttr::new(Color::Red, Color::Black));
+    
+    println!(r#"
+           _..._  ,s$$$$s.
+        .$$$$$$$s$$$$ss$$$$,
+        $$$sss$$$$$$s$$$$$$$
+        $$ss$$$$$$$$$$$$$$$$
+        '$$$s$$$$$$$$$$$$$$'
+         '$$$$$$$$$$$$$$$$'
+           '$$$$$$$$$$$$$'
+            '$$$$$$$$$$$'
+              '$$$$$$$'
+               '$$$$$'
+                 "$" 
+                  ;
+                 ;
+                 ;            
+                  ;
+                 ,'
+                 ;
+                 ',
+                  ',
+                   ;
+                  '
+    "#);
+    
+
+    STDOUT.lock().change_color(CharAttr::new(Color::White, Color::Black));
 }
