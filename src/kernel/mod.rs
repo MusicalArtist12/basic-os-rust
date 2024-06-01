@@ -6,7 +6,7 @@ pub mod boot;
 pub mod gdt;
 pub mod mem;
 
-use crate::kernel::mem::frame_allocator::FrameAllocator;
+use crate::kernel::mem::frame_table::FrameTable;
 use crate::main;
 
 use crate::hlt;
@@ -65,7 +65,7 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
     let multiboot_end = multiboot_start + info.header.size as usize;
     
     
-    let mut allocator = FrameAllocator::new(
+    let mut allocator = FrameTable::new(
         multiboot_start,
         multiboot_end,
         kernel_start,
@@ -84,9 +84,9 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
 
     main();
 
-    /* 
     loop {
         let frame = allocator.allocate_frame();
+        
 
         match frame {
             None => {
@@ -94,8 +94,10 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
                 break;
             },
             Some(x) => {
-                if x.number % 1000 == 0 {
+                if x.number == 0 {
                     println!("{:?}", x);
+                    let used = allocator.used_space();
+                    println!("{} MB available", (mem - used) as f32 / (1024 * 1024) as f32);                
                 }
 
                 // allocator.deallocate_frame(x);
@@ -105,8 +107,7 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
     }
 
     let used = allocator.used_space();
-    println!("{} MB available", (mem - used) as f32 / (1024 * 1024) as f32);
-    */
+    println!("{} MB available", (mem - used) as f32 / (1024 * 1024) as f32);  
 
     cli!();
     hlt!();
