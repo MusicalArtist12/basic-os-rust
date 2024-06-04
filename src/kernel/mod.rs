@@ -84,10 +84,10 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
 
     main();
 
+    /* 
     loop {
         let frame = allocator.allocate_frame();
         
-
         match frame {
             None => {
                 // println!("{:?}", frame);
@@ -108,7 +108,8 @@ pub extern "C" fn _start(multiboot_information_address: usize) -> ! {
 
     let used = allocator.used_space();
     println!("{} MB available", (mem - used) as f32 / (1024 * 1024) as f32);  
-
+    */
+    
     cli!();
     hlt!();
 }

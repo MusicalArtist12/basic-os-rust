@@ -1,7 +1,6 @@
-use crate::{gigabytes, kernel::{MemoryArea, MemoryAreaIter}, kilobytes};
-
-const PAGE_SIZE: usize = kilobytes!(4);
-const NUM_FRAMES: usize = gigabytes!(4) / PAGE_SIZE;
+use crate::kernel::{MemoryArea, MemoryAreaIter};
+use super::{PAGE_SIZE, NUM_FRAMES};
+use core::ops::{Index, IndexMut};
 
 #[allow(dead_code)]
 #[repr(u8)]
