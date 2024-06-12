@@ -1,6 +1,5 @@
 use crate::kernel::{MemoryArea, MemoryAreaIter};
 use super::{PAGE_SIZE, NUM_FRAMES};
-use core::ops::{Index, IndexMut};
 
 mod frame_table_segment;
 pub mod frame_table;

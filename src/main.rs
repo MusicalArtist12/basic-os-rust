@@ -18,8 +18,6 @@ fn on_panic(panic_info: &PanicInfo) -> ! {
     println!("oh no :(\n");
     println!("{:#?}", panic_info);
 
-    loop {};
-
     hlt!();
 }
 
