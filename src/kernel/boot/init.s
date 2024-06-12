@@ -89,6 +89,12 @@ setup_page_tables:
         cmp $512, %ecx
     jne .map_p2_table
 
+    movl $p4_table, %eax
+    or $0b11, %eax
+    // movl %eax, p4_table + 511 * 8
+    movl %eax, [p4_table + 511 * 8]
+
+
     ret
 
 enable_paging:

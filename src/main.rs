@@ -1,6 +1,6 @@
 #![no_std] // don't link the Rust standard library
 #![no_main] // disable all Rust-level entry points
-
+#![allow(dead_code)]
 #![feature(naked_functions)]
 
 pub mod kernel;
@@ -17,6 +17,8 @@ fn on_panic(panic_info: &PanicInfo) -> ! {
     
     println!("oh no :(\n");
     println!("{:#?}", panic_info);
+
+    loop {};
 
     hlt!();
 }

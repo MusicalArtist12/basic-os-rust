@@ -1,9 +1,7 @@
 const VGA_BUFFER_ADDR: usize = 0x0b8000;
+const TAB_LEN: usize = 4;
 
-use core::{
-    ptr::{read_volatile, write_volatile}, 
-    fmt::{self, Write}
-};
+use core::fmt::{self, Write};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
@@ -30,6 +28,14 @@ pub enum Color {
 #[repr(transparent)]
 pub struct CharAttr(u8);
 
+
+impl CharAttr {
+    pub const fn new(foreground: Color, background: Color) -> CharAttr {
+        CharAttr((background as u8) << 4 | (foreground as u8))
+    }
+}
+
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 pub struct ScreenChar {
@@ -37,19 +43,6 @@ pub struct ScreenChar {
     attribute: CharAttr
 }
 
-pub struct Terminal {
-    default_attr: CharAttr,
-    buffer: *mut ScreenChar,
-    width: usize,
-    height: usize,
-    column_idx: usize
-}
-
-impl CharAttr {
-    pub const fn new(foreground: Color, background: Color) -> CharAttr {
-        CharAttr((background as u8) << 4 | (foreground as u8))
-    }
-}
 
 impl ScreenChar {
     pub fn new(attr: CharAttr, value: u8) -> ScreenChar {
@@ -60,7 +53,20 @@ impl ScreenChar {
     }
 }
 
+pub struct Terminal {
+    default_attr: CharAttr,
+    buffer_raw: *mut [[ScreenChar; 80]; 25],
+    width: usize,
+    height: usize,
+    column_idx: usize
+}
+
+
 impl Terminal {
+    fn buffer(&self) -> &mut [[ScreenChar; 80]; 25] {
+        unsafe {&mut *self.buffer_raw}
+    }
+
     fn print_char(&mut self, val: u8) {
         if val == b'\n' {
             self.newline();
@@ -72,8 +78,7 @@ impl Terminal {
             if self.column_idx >= self.width {
                 self.newline();
             }
-
-            self.write((self.column_idx, self.height - 1), val, None);
+            self.buffer()[self.height - 1][self.column_idx] = ScreenChar::new(self.default_attr, val);
             self.column_idx += 1;
         }
     }
@@ -81,21 +86,15 @@ impl Terminal {
     fn newline(&mut self) {
         for row in 1..self.height {
             for col in 0..self.width {
-                let character = self.read((col, row));
-                self.write((col, row), b' ', None);
-
-                match character {
-                    Some(x) => self.write((col, row - 1), x.ascii_char, Some(x.attribute)),
-                    None => {}
-                }        
+                self.buffer()[row - 1][col] = self.buffer()[row][col];
+                self.buffer()[row][col] = ScreenChar::new(self.default_attr, b' '); 
             }
         }
-
         self.column_idx = 0;
     }
 
     fn print_tab(&mut self) {
-        for _ in 0..4 {
+        for _ in 0..TAB_LEN {
             self.write_char(' ').unwrap();
         }
     }
@@ -103,50 +102,17 @@ impl Terminal {
     pub const fn vga_text_mode(def_attr: CharAttr) -> Terminal {
         Terminal {
             default_attr: def_attr,
-            buffer: VGA_BUFFER_ADDR as *mut ScreenChar,
+            buffer_raw: VGA_BUFFER_ADDR as *mut [[ScreenChar; 80]; 25] ,
             width: 80,
             height: 25,
             column_idx: 0
         }   
     }
 
-    pub fn read(&mut self, pos: (usize, usize)) -> Option<ScreenChar> {
-        if pos.0 > self.width || pos.1 > self.height {
-            return None;
-        }
-
-        let index: isize = (pos.0 + (pos.1 * self.width)) as isize;
-        let character: ScreenChar = unsafe {
-            
-            read_volatile(self.buffer.offset(index)) as ScreenChar
-        };
-        return Some(character);
-    }
-
-    pub fn write(&mut self, pos: (usize, usize), val: u8, overwrite_attr: Option<CharAttr>) {        
-        if pos.0 > self.width || pos.1 > self.height {
-            return;
-        }
-        
-        let output: ScreenChar = ScreenChar {
-            attribute: match overwrite_attr {
-                Some(x) => x,
-                None => self.default_attr
-            },
-            ascii_char: val
-        };
-
-        let index: isize = (pos.0 + (pos.1 * self.width)) as isize;
-
-        unsafe { 
-            write_volatile(self.buffer.offset(index), output);
-        }
-    }
-
     pub fn clear_screen(&mut self) {
         for row in 1..self.height {
             for col in 0..self.width {    
-                self.write((col, row), b' ', None);
+                self.buffer()[row][col] = ScreenChar::new(self.default_attr, b' ');
             }
         }   
     }
