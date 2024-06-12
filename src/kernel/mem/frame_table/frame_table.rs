@@ -1,8 +1,6 @@
 use super::*;
 use super::frame_table_segment::FrameTableSegment;
 
-
-
 pub struct FrameTable {
     num_segments: usize,
     segments: [Option<FrameTableSegment>; 64]

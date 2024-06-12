@@ -66,7 +66,7 @@ impl FrameTableSegment {
                 self.frames[i] = FrameState::Occupied;
 
                 return Some(Frame { 
-                    number: i,
+                    number: i + self.start_frame,
                 });
             }
         }; 
@@ -77,7 +77,7 @@ impl FrameTableSegment {
     pub fn deallocate_frame(&mut self, frame: Frame) {
         assert!(self.handles_frame(frame));
 
-        self.frames[frame.number] = FrameState::Free;
+        self.frames[frame.number - self.start_frame] = FrameState::Free;
         if frame.number <= self.next_frame {
             self.next_frame = frame.number;
         }
